@@ -115,10 +115,34 @@ def drawSpectrum(signal_y):
         ax.grid(True)
     plt.show()
 
+# for i, y_sig in enumerate(y_final):
+#     drawSignal(y_sig, t_s, Fd)
+#     drawSpectrum(y_sig)
 
 
 
-for i, y_sig in enumerate(y_final):
-    drawSignal(y_sig, t_s, Fd)
-    drawSpectrum(y_sig)
+# 3.1.2 Simulate accord
+def  generateAccord(allNotes, samplingRate):
+    delay_ms = 50
+    second_ms = 1000
+    n_delay =  (delay_ms * samplingRate / second_ms)
+    # delay each note for some time (delay time: first t, second t*2, t*3, .... t*N)
+    
+    notesWithDelay=[]
+    for i, note in enumerate(allNotes):
+        count = int((i+1) * n_delay)
+        temp_a = note[:-count]
+        delayZeros = np.zeros(count).astype(np.float64)
+        notesWithDelay.append(np.concatenate([delayZeros, temp_a]))
+    
+    accord = np.zeros(len(allNotes[0])).astype(np.float64)
+    for note in notesWithDelay:
+        accord = accord + note
+    
+    return accord
+
+
+accordSignal = generateAccord(y_final, Fd)
+drawSignal(accordSignal, t_s, Fd)
+drawSpectrum(accordSignal)
 
