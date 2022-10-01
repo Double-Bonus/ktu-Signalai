@@ -57,21 +57,9 @@ for i, note in enumerate(notes):
     
     y_final.append(signal.lfilter(b, a, X_final[i])); # 3 Task
 
-print(np.shape(X_final))
+if debug:
+    print(np.shape(X_final))
 # static assert ar len == (fd*ts=44100*3=132300)
-
-
-tn = np.linspace(0, t_s, num=(Fd*t_s))
-if 0:
-    plt.figure
-    plt.plot(tn, X_final[0], 'b', alpha=0.75)
-    plt.plot(tn, y_final[0], 'r--')
-    # plt.plot(tn, y_final[0], 'r--', t, z2, 'r', t, y, 'k')
-    # plt.legend(('noisy signal', 'lfilter, once', 'lfilter, twice',
-    #             'filtfilt'), loc='best')
-    plt.grid(True)
-    plt.show()
-
 
 # 4. Listen to notes:
 def saveNoteAsWav(noteData, samplingRate, filename):
@@ -82,51 +70,55 @@ for i, audioData in enumerate(y_final):
     saveNoteAsWav(audioData, Fd, f"Note{i}.wav")
     
 
-# 5 Get FFT and see spectrum
-
-
-noteNr = 2
-
-nfft = len(y_final[noteNr])
-yf = np.fft.fft(y_final[noteNr])
-
-spectrum = np.abs(yf) / nfft
-spectrum_db = 20 * np.log10(spectrum/np.max(spectrum))
-
-if 0: # debug
-    print(yf)
-    print(type(yf))
-    print(spectrum)
-    print(spectrum_db)
-    
-k = list(range(0, nfft))
-
-print("5 Debug")
-print(Fd)
-print(nfft)
-
-f_Hz = [i * (Fd/nfft) for i in k]
-
-
-
-if 1:    
-    # fig, ax= plt.figure()
-    fig = plt.figure()
-    ax = plt.axes()
-    ax.plot(f_Hz, spectrum_db)
-    ax.set_xlim(0, Fd/2)
-    ax.set_ylim(-80, 0)
-    # plt.plot(tn, y_final[0], 'r--')
+# 5 Get FFT and draw spectrum
+def drawSignal(signal_y, t_s, Fd):
+    tn = np.linspace(0, t_s, num=(Fd*t_s))
+    plt.figure
+    plt.plot(tn, signal_y, 'r--') #  alpha=0.75)
     # plt.plot(tn, y_final[0], 'r--', t, z2, 'r', t, y, 'k')
     # plt.legend(('noisy signal', 'lfilter, once', 'lfilter, twice',
     #             'filtfilt'), loc='best')
-    ax.grid(True)
+    plt.grid(True)
+    plt.show()
+
+def drawSpectrum(signal_y):
+    nfft = len(signal_y)
+    yf = np.fft.fft(signal_y)
+
+    spectrum = np.abs(yf) / nfft
+    spectrum_db = 20 * np.log10(spectrum/np.max(spectrum))
+    if 0: # debug
+        print(yf)
+        print(type(yf))
+        print(spectrum)
+        print(spectrum_db)
+        
+    k = list(range(0, nfft))
+
+    if 0: # debug
+        print("5 Debug")
+        print(Fd)
+        print(nfft)
+    f_Hz = [i * (Fd/nfft) for i in k]
+
+
+
+    if 1:    
+        # fig, ax= plt.figure()
+        fig = plt.figure()
+        ax = plt.axes()
+        ax.plot(f_Hz, spectrum_db)
+        ax.set_xlim(0, Fd/2)
+        ax.set_ylim(-80, 0)
+        # plt.legend(('noisy signal', 'lfilter, once', 'lfilter, twice',
+        #             'filtfilt'), loc='best')
+        ax.grid(True)
     plt.show()
 
 
 
 
+for i, y_sig in enumerate(y_final):
+    drawSignal(y_sig, t_s, Fd)
+    drawSpectrum(y_sig)
 
-
-# nfft = len(X_final[0])
-# S = abs()
