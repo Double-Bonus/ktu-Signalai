@@ -5,8 +5,9 @@
 
 import numpy as np
 from scipy import signal
+from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
-
+from sklearn import preprocessing
 
 debug = True
 
@@ -51,7 +52,6 @@ for i, note in enumerate(notes):
     if debug:
         print(X_final[i])
 
-
     b = [1]
     a = np.concatenate([[1], np.zeros(N[i]-1), [-0.5, -0.5]])
     
@@ -73,11 +73,14 @@ if 0:
     plt.show()
 
 
-# 4. task is missing!
+# 4. Listen to notes:
+def saveNoteAsWav(noteData, samplingRate, filename):
+    audioScaled = preprocessing.minmax_scale(noteData, feature_range=(-1,1))
+    write(filename=filename, rate=Fd, data=audioScaled.astype(np.float32))
 
-
-
-
+for i, audioData in enumerate(y_final):
+    saveNoteAsWav(audioData, Fd, f"Note{i}.wav")
+    
 
 # 5 Get FFT and see spectrum
 
