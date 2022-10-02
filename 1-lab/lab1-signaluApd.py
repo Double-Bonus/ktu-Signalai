@@ -9,7 +9,7 @@ from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
-debug = True
+debug = False
 
 f2 = 110
 f3 = 147
@@ -77,6 +77,8 @@ for i, audioData in enumerate(y_final):
 def drawSignal(signal_y, t_s, Fd):
     tn = np.linspace(0, t_s, num=(Fd*t_s))
     plt.figure
+    # ax = plt.axes()
+    # ax.margins(0.2, 0.2)
     plt.plot(tn, signal_y, 'r--') #  alpha=0.75)
     # plt.plot(tn, y_final[0], 'r--', t, z2, 'r', t, y, 'k')
     # plt.legend(('noisy signal', 'lfilter, once', 'lfilter, twice',
@@ -119,9 +121,9 @@ def drawSpectrum(signal_y):
     plt.show()
 
 
-for i, y_sig in enumerate(y_final):
-    drawSignal(y_sig, t_s, Fd)
-    drawSpectrum(y_sig)
+# for i, y_sig in enumerate(y_final):
+#     drawSignal(y_sig, t_s, Fd)
+#     drawSpectrum(y_sig)
 
 
 
@@ -150,6 +152,51 @@ def  generateAccord(allNotes, samplingRate):
 
 
 accordSignal = generateAccord(y_final, Fd)
-drawSignal(accordSignal, t_s, Fd)
-drawSpectrum(accordSignal)
+# drawSignal(accordSignal, t_s, Fd)
+# drawSpectrum(accordSignal)
 saveNoteAsWav(accordSignal, Fd, "accord.wav")
+
+
+# 3.2.1
+def nonLinearDistortion(signal):
+    def satlins(n):
+        if (n <= -1):
+            return -1
+        if (-1 <= n <= 1):
+            return n
+        if (1 <= n):
+            return 1
+    sig_after = [satlins(i) for i in signal]
+    return sig_after
+    
+K = 30
+distortedAccord = nonLinearDistortion(accordSignal)
+distortedAccord = np.multiply(distortedAccord, K) # is it good?
+
+drawSignal(distortedAccord, t_s, Fd)
+drawSpectrum(distortedAccord)
+saveNoteAsWav(distortedAccord, Fd, f"DistAccord{K}.wav")
+
+
+# Aptarkite kaip keičiasi akordo skambesys ir jo laikinės bei dažninės charakteristikos, kai K = 5 ir K = 50.
+if 0:
+    K = 5
+    distortedAccord_5 = nonLinearDistortion(accordSignal)
+    distortedAccord_5 = np.multiply(distortedAccord_5, K) # is it good?
+
+    drawSignal(distortedAccord_5, t_s, Fd)
+    drawSpectrum(distortedAccord_5)
+    saveNoteAsWav(distortedAccord_5, Fd, f"DistAccord{K}.wav")
+
+    K = 50
+    distortedAccord_50 = nonLinearDistortion(accordSignal)
+    distortedAccord_50 = np.multiply(distortedAccord_50, K) # is it good?
+
+    drawSignal(distortedAccord_50, t_s, Fd)
+    drawSpectrum(distortedAccord_50)
+    saveNoteAsWav(distortedAccord_50, Fd, f"DistAccord{K}.wav")
+
+
+# 3.2.2 Reverberacijos efekto modeliavimas
+
+
