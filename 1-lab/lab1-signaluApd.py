@@ -55,7 +55,11 @@ for i, note in enumerate(notes):
     b = [1]
     a = np.concatenate([[1], np.zeros(N[i]-1), [-0.5, -0.5]])
     
-    y_final.append(signal.lfilter(b, a, X_final[i])); # 3 Task
+    
+    audioData = signal.lfilter(b, a, X_final[i])
+    audioScaled = preprocessing.minmax_scale(audioData, feature_range=(-1,1))
+    
+    y_final.append(audioScaled); # 3 Task
 
 if debug:
     print(np.shape(X_final))
@@ -63,8 +67,7 @@ if debug:
 
 # 4. Listen to notes:
 def saveNoteAsWav(noteData, samplingRate, filename):
-    audioScaled = preprocessing.minmax_scale(noteData, feature_range=(-1,1))
-    write(filename=filename, rate=Fd, data=audioScaled.astype(np.float32))
+    write(filename=filename, rate=samplingRate, data=noteData.astype(np.float32))
 
 for i, audioData in enumerate(y_final):
     saveNoteAsWav(audioData, Fd, f"Note{i}.wav")
@@ -115,25 +118,29 @@ def drawSpectrum(signal_y):
         ax.grid(True)
     plt.show()
 
-# for i, y_sig in enumerate(y_final):
-#     drawSignal(y_sig, t_s, Fd)
-#     drawSpectrum(y_sig)
+
+for i, y_sig in enumerate(y_final):
+    drawSignal(y_sig, t_s, Fd)
+    drawSpectrum(y_sig)
 
 
 
 # 3.1.2 Simulate accord
 def  generateAccord(allNotes, samplingRate):
-    delay_ms = 50
+    delay_ms = 75
     second_ms = 1000
     n_delay =  (delay_ms * samplingRate / second_ms)
     # delay each note for some time (delay time: first t, second t*2, t*3, .... t*N)
     
     notesWithDelay=[]
     for i, note in enumerate(allNotes):
-        count = int((i+1) * n_delay)
-        temp_a = note[:-count]
-        delayZeros = np.zeros(count).astype(np.float64)
-        notesWithDelay.append(np.concatenate([delayZeros, temp_a]))
+        if i == 0: # do not delay first note
+            notesWithDelay.append(np.concatenate([note]))
+        else:
+            count = int(i * n_delay)
+            temp_a = note[:-count]
+            delayZeros = np.zeros(count).astype(np.float64)
+            notesWithDelay.append(np.concatenate([delayZeros, temp_a]))
     
     accord = np.zeros(len(allNotes[0])).astype(np.float64)
     for note in notesWithDelay:
@@ -145,4 +152,4 @@ def  generateAccord(allNotes, samplingRate):
 accordSignal = generateAccord(y_final, Fd)
 drawSignal(accordSignal, t_s, Fd)
 drawSpectrum(accordSignal)
-
+saveNoteAsWav(accordSignal, Fd, "accord.wav")
