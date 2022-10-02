@@ -31,7 +31,6 @@ for i, note in enumerate(notes):
         print(i)
         print(note)
     N.append(round(Fd / note)) # 1 Task
-
     if debug:
         print(N)
 
@@ -199,4 +198,28 @@ if 0:
 
 # 3.2.2 Reverberacijos efekto modeliavimas
 
+N_ms = 200
+K_reverb = 1
 
+# filtro koeficientai:
+# b = [1]
+# a = [1; 0...0(N);  0.4(K)]
+
+def addReverb(signalIn, samplingRate, N_ms, K_coef):
+    second_ms = 1000
+    n_delay =  (N_ms * samplingRate / second_ms)
+    b = [1]
+    a = np.concatenate([[1], np.zeros(int(n_delay-1)), [-K_coef]])
+    # a = np.concatenate([[1], np.zeros(N[i]-1), [-0.5, -0.5]])
+    
+    
+    reverbedSignal = signal.lfilter(b, a, signalIn)
+    return reverbedSignal
+
+print("reverbedSignal")
+accordSignal = generateAccord(y_final, Fd)
+accordSignal_rev = addReverb(accordSignal, Fd, N_ms, K_reverb)
+
+drawSignal(accordSignal_rev, t_s, Fd)
+drawSpectrum(accordSignal_rev)
+saveNoteAsWav(accordSignal_rev, Fd, f"Reverb{K_reverb}.wav")
