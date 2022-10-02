@@ -3,6 +3,7 @@
 
 # f1 = 0 # is not used
 
+import sys
 import numpy as np
 from scipy import signal
 from scipy.io.wavfile import write
@@ -127,7 +128,7 @@ def drawSpectrum(signal_y):
 
 
 # 3.1.2 Simulate accord
-def  generateAccord(allNotes, samplingRate):
+def generateAccord(allNotes, samplingRate):
     delay_ms = 75
     second_ms = 1000
     n_delay =  (delay_ms * samplingRate / second_ms)
@@ -172,9 +173,9 @@ K = 30
 distortedAccord = nonLinearDistortion(accordSignal)
 distortedAccord = np.multiply(distortedAccord, K) # is it good?
 
-drawSignal(distortedAccord, t_s, Fd)
-drawSpectrum(distortedAccord)
-saveNoteAsWav(distortedAccord, Fd, f"DistAccord{K}.wav")
+# drawSignal(distortedAccord, t_s, Fd)
+# drawSpectrum(distortedAccord)
+# saveNoteAsWav(distortedAccord, Fd, f"DistAccord{K}.wav")
 
 
 # Aptarkite kaip keičiasi akordo skambesys ir jo laikinės bei dažninės charakteristikos, kai K = 5 ir K = 50.
@@ -197,7 +198,6 @@ if 0:
 
 
 # 3.2.2 Reverberacijos efekto modeliavimas
-
 N_ms = 200
 K_reverb = 1
 
@@ -210,16 +210,57 @@ def addReverb(signalIn, samplingRate, N_ms, K_coef):
     n_delay =  (N_ms * samplingRate / second_ms)
     b = [1]
     a = np.concatenate([[1], np.zeros(int(n_delay-1)), [-K_coef]])
-    # a = np.concatenate([[1], np.zeros(N[i]-1), [-0.5, -0.5]])
-    
-    
     reverbedSignal = signal.lfilter(b, a, signalIn)
     return reverbedSignal
 
-print("reverbedSignal")
-accordSignal = generateAccord(y_final, Fd)
-accordSignal_rev = addReverb(accordSignal, Fd, N_ms, K_reverb)
+# print("reverbedSignal")
+# accordSignal = generateAccord(y_final, Fd)
+# accordSignal_rev = addReverb(accordSignal, Fd, N_ms, K_reverb)
 
-drawSignal(accordSignal_rev, t_s, Fd)
-drawSpectrum(accordSignal_rev)
-saveNoteAsWav(accordSignal_rev, Fd, f"Reverb{K_reverb}.wav")
+# drawSignal(accordSignal_rev, t_s, Fd)
+# drawSpectrum(accordSignal_rev)
+# saveNoteAsWav(accordSignal_rev, Fd, f"Reverb{K_reverb}.wav")
+
+
+# 4 extra task
+if 0:
+    """ 
+    Overdrive is an effect where the amplitude of the input signal undergoes a non-linear amplification. The threshold determines how much of 
+    the signal undergoes the nonlinear amplification curve (lower threshold implies more of the signal is captured in the curve).
+    """
+    def overdrive(signal):
+        def overLambda(x):
+            if (0 <= np.abs(x) and np.abs(x) < (1/3)):
+                return x * 2 * np.abs(x)
+            elif ((1/3) <= np.abs(x) and np.abs(x) < (2/3)):
+                return x * (3-(2-(3*np.abs(x))**2 )) / 3
+            elif ((2/3) <= np.abs(x) and np.abs(x) < 1):
+                return x
+        sig_after = [overLambda(i) for i in signal if overLambda(i) is not None]
+        return sig_after
+
+    accordSignal_o = generateAccord(y_final, Fd)
+    drawSignal(accordSignal_o, t_s, Fd)
+    drawSpectrum(accordSignal_o)
+    accordSignal_over = overdrive(accordSignal_o)
+
+    drawSignal(accordSignal_over, t_s, Fd)
+    drawSpectrum(accordSignal_over)
+    saveNoteAsWav(accordSignal_over, Fd, f"Over.wav")
+
+
+if 1:
+    def applyFuzz(signal, a = 15):
+        def fuzzLambda(x):
+            return x * (1 - np.exp( -a* np.abs(x)))
+        sig_after = [fuzzLambda(i) for i in signal]
+        return sig_after
+
+    accordSignal_f = generateAccord(y_final, Fd)
+    drawSignal(accordSignal_f, t_s, Fd)
+    drawSpectrum(accordSignal_f)
+    accordSignal_fuzz = applyFuzz(accordSignal_f)
+
+    drawSignal(accordSignal_fuzz, t_s, Fd)
+    drawSpectrum(accordSignal_fuzz)
+    saveNoteAsWav(accordSignal_fuzz, Fd, f"Fuzz.wav")
