@@ -250,15 +250,15 @@ if 0:
 
 
 if 1:
-    def applyFuzz(signal, a = 15):
+    def applyFuzz(signal, a = 50):
         def fuzzLambda(x):
             return x * (1 - np.exp( -a* np.abs(x)))
-        sig_after = [fuzzLambda(i) for i in signal]
+        fuzz = lambda x: x * (1 - np.exp( -a* np.abs(x)))
+        # sig_after = [fuzzLambda(i) for i in signal]
+        sig_after = fuzz(signal)
         return sig_after
 
     accordSignal_f = generateAccord(y_final, Fd)
-    drawSignal(accordSignal_f, t_s, Fd)
-    drawSpectrum(accordSignal_f)
     accordSignal_fuzz = applyFuzz(accordSignal_f)
 
     drawSignal(accordSignal_fuzz, t_s, Fd)
