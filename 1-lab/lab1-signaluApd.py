@@ -21,7 +21,9 @@ class MusicLab:
         f5 = 294
         f6 = 349
         self.notes = [f2, f3, f4, f5, f6]
+        self.notesNames = ["A styga", "D styga", "G styga", "B styga", "e styga"]
         self.STRING_COUNT = 5
+        self.saveDir = "out/"
         
         self.samplingRate = 44100
         self.t_s = 3
@@ -69,24 +71,25 @@ class MusicLab:
         return y_final
     
     # 4. Listen to notes:
-    # TODO: samlping rate no need as parameter????
+    # TODO: sampling rate no need as parameter????
     def saveNoteAsWav(self, noteData, samplingRate, filename):
         write(filename=filename, rate=samplingRate, data=noteData.astype(np.float32))
         
-    # 5 Get FFT and draw spectrum
-    def drawSignal(self, signal_y, Fd):
-        tn = np.linspace(0, self.t_s, num=(Fd*self.t_s))
+    def drawSignal(self, signal_y, title, show=False):
+        tn = np.linspace(0, self.t_s, num=len(signal_y))
         plt.figure
-        # ax = plt.axes()
-        # ax.margins(0.2, 0.2)
-        plt.plot(tn, signal_y, 'r--') #  alpha=0.75)
-        # plt.plot(tn, y_final[0], 'r--', t, z2, 'r', t, y, 'k')
-        # plt.legend(('noisy signal', 'lfilter, once', 'lfilter, twice',
-        #             'filtfilt'), loc='best')
+        plt.plot(tn, signal_y, 'r-')
+        plt.title('Signalas laiko srityje, ' + title)
+        plt.xlabel('t, s')
+        plt.ylabel('A')
         plt.grid(True)
-        plt.show()
+        plt.savefig(self.saveDir + "amp_" + title)
+        if show:
+            plt.show()
+        plt.close()
 
-    def drawSpectrum(self, signal_y):
+    # 5 Get FFT and draw spectrum
+    def drawSpectrum(self, signal_y, title, show = False):
         nfft = len(signal_y)
         yf = np.fft.fft(signal_y)
 
@@ -99,19 +102,21 @@ class MusicLab:
             print(spectrum_db)
             
         k = list(range(0, nfft))
-        f_Hz = [i * (self.samplingRate/nfft) for i in k]
+        f_Hz = [i * (self.samplingRate/nfft) for i in k] 
 
-        if 1:    
-            # fig, ax= plt.figure()
-            fig = plt.figure()
-            ax = plt.axes()
-            ax.plot(f_Hz, spectrum_db)
-            ax.set_xlim(0, self.samplingRate/2)
-            ax.set_ylim(-80, 0)
-            # plt.legend(('noisy signal', 'lfilter, once', 'lfilter, twice',
-            #             'filtfilt'), loc='best')
-            ax.grid(True)
-        plt.show()
+        # fig = plt.figure()
+        ax = plt.axes()
+        ax.plot(f_Hz, spectrum_db)
+        ax.set_xlim(0, self.samplingRate/2)
+        ax.set_ylim(-80, 0)
+        plt.title('Signalas dažnių srityje, ' + title)
+        plt.xlabel('f, Hz')
+        plt.ylabel('S, db')
+        plt.grid(True)
+        plt.savefig(self.saveDir + "spec_" + title)
+        if show:
+            plt.show()
+        plt.close()
         
     # 3.1.2 Simulate accord
     def generateAccord(self, allNotes):
@@ -205,15 +210,15 @@ sounds_Y = musicObj.generateSound_Y(signals_X)
 for i, audioData in enumerate(sounds_Y):
     musicObj.saveNoteAsWav(audioData, musicObj.samplingRate, f"Note{i}.wav")
 
-if 0:
+if 1:
     for i, y_sig in enumerate(sounds_Y):
-        musicObj.drawSignal(y_sig, musicObj.samplingRate)
-        musicObj.drawSpectrum(y_sig)
+        musicObj.drawSignal(y_sig, musicObj.notesNames[i])
+        musicObj.drawSpectrum(y_sig, musicObj.notesNames[i])
 
-if 0:
+if 1:
     accordSignal = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal, musicObj.samplingRate)
-    musicObj.drawSpectrum(accordSignal)
+    musicObj.drawSignal(accordSignal, "Dm akordas", True)
+    musicObj.drawSpectrum(accordSignal, "Dm akordas", True)
     musicObj.saveNoteAsWav(accordSignal, musicObj.samplingRate, "accord.wav")
 
 
@@ -223,7 +228,7 @@ if 0:
     distortedAccord = musicObj.nonLinearDistortion(accordSignal)
     distortedAccord = np.multiply(distortedAccord, K)
 
-    musicObj.drawSignal(distortedAccord, musicObj.samplingRate)
+    musicObj.drawSignal(distortedAccord)
     musicObj.drawSpectrum(distortedAccord)
     musicObj.saveNoteAsWav(distortedAccord, musicObj.samplingRate, f"DistAccord{K}.wav")
 
@@ -232,14 +237,14 @@ if 0:
     K = 5
     distortedAccord_5 = musicObj.nonLinearDistortion(accordSignal)
     distortedAccord_5 = np.multiply(distortedAccord_5, K)
-    musicObj.drawSignal(distortedAccord_5, musicObj.samplingRate)
+    musicObj.drawSignal(distortedAccord_5)
     musicObj.drawSpectrum(distortedAccord_5)
     musicObj.saveNoteAsWav(distortedAccord_5, musicObj.samplingRate, f"DistAccord{K}.wav")
 
     K = 50
     distortedAccord_50 = musicObj.nonLinearDistortion(accordSignal)
     distortedAccord_50 = np.multiply(distortedAccord_50, K)
-    musicObj.drawSignal(distortedAccord_50, musicObj.samplingRate)
+    musicObj.drawSignal(distortedAccord_50)
     musicObj.drawSpectrum(distortedAccord_50)
     musicObj.saveNoteAsWav(distortedAccord_50, musicObj.samplingRate, f"DistAccord{K}.wav")
 
@@ -266,32 +271,32 @@ if 0:
         overSounds_Y.append(overdrive(sound))
         
     accordSignal_o = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal_o, musicObj.samplingRate)
+    musicObj.drawSignal(accordSignal_o)
     musicObj.drawSpectrum(accordSignal_o)
     
     newAccordSignal_o = musicObj.generateAccord(overSounds_Y)
-    musicObj.drawSignal(newAccordSignal_o, musicObj.samplingRate) # TODO: check if thats really zero
+    musicObj.drawSignal(newAccordSignal_o) # TODO: check if thats really zero
     musicObj.drawSpectrum(newAccordSignal_o)
     musicObj.saveNoteAsWav(newAccordSignal_o, musicObj.samplingRate, f"OverNew.wav")
         
 
     # accordSignal_o = musicObj.generateAccord(sounds_Y)
-    # musicObj.drawSignal(accordSignal_o, musicObj.samplingRate)
+    # musicObj.drawSignal(accordSignal_o)
     # musicObj.drawSpectrum(accordSignal_o)
     # accordSignal_over = overdrive(accordSignal_o)
 
-    # musicObj.drawSignal(accordSignal_over, musicObj.samplingRate) # TODO: check if thats really zero
+    # musicObj.drawSignal(accordSignal_over) # TODO: check if thats really zero
     # musicObj.drawSpectrum(accordSignal_over)
     # musicObj.saveNoteAsWav(accordSignal_over, musicObj.samplingRate, f"Over.wav")
 
 
-if 1:
+if 0:
     accordSignal_f = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal_f, musicObj.samplingRate)
+    musicObj.drawSignal(accordSignal_f)
     musicObj.drawSpectrum(accordSignal_f)
     
     accordSignal_fuzz = applyFuzz(accordSignal_f, a=15) # or to notes?!?!?!?
 
-    musicObj.drawSignal(accordSignal_fuzz, musicObj.samplingRate)
+    musicObj.drawSignal(accordSignal_fuzz)
     musicObj.drawSpectrum(accordSignal_fuzz)
     musicObj.saveNoteAsWav(accordSignal_fuzz, musicObj.samplingRate, f"Fuzz.wav")
