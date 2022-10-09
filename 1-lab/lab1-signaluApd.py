@@ -3,67 +3,79 @@
 
 # f1 = 0 # is not used
 
-import sys
 import numpy as np
 from scipy import signal
 from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
-debug = False
+class MusicLab:
+    def __init__(self, debug = False):
+        self.debug = debug
 
-f2 = 110
-f3 = 147
-f4 = 220
-f5 = 294
-f6 = 349
+        f2 = 110
+        f3 = 147
+        f4 = 220
+        f5 = 294
+        f6 = 349
+        self.notes = [f2, f3, f4, f5, f6]
+        self.STRING_COUNT = 5
+        
+        self.samplingRate = 44100
+        self.t_s = 3
+        self.N = np.empty(self.STRING_COUNT, dtype=int)
 
-Fd  = 44100
-t_s = 3
+    def countDelays_N(self):
+        for i, note in enumerate(self.notes):
+            if self.debug:
+                print(i)
+                print(note)
+        self.N[i] = round(self.samplingRate / note)
+        # self.N.append(round(self.samplingRate / note)) # 1 Task
+        if self.debug:
+            print(self.N)
 
-notes = [f2, f3, f4, f5, f6]
+
+musicObj = MusicLab(True)
+musicObj.countDelays_N()
 
 
-N=[]
+
+
+
 X_final = []
 y_final = []
-for i, note in enumerate(notes):
-    if debug:
-        print(i)
-        print(note)
-    N.append(round(Fd / note)) # 1 Task
-    if debug:
-        print(N)
-
-    x_random = []
-    x_random = np.random.uniform(0, 1, N[i])
-    if debug:
-        print(x_random)
-
-    K_zeroCount = Fd*t_s - N[i]
-    if debug:
-        print(K_zeroCount)
-
-    x_zeros = []
-    x_zeros = np.zeros(K_zeroCount)
 
 
-    X_final.append(np.concatenate([x_random, x_zeros])) # 2 Task
-    if debug:
-        print(X_final[i])
+#     x_random = []
+#     x_random = np.random.uniform(0, 1, N[i])
+#     if debug:
+#         print(x_random)
 
-    b = [1]
-    a = np.concatenate([[1], np.zeros(N[i]-1), [-0.5, -0.5]])
+#     K_zeroCount = Fd*t_s - N[i]
+#     if debug:
+#         print(K_zeroCount)
+
+#     x_zeros = []
+#     x_zeros = np.zeros(K_zeroCount)
+
+
+#     X_final.append(np.concatenate([x_random, x_zeros])) # 2 Task
+#     if debug:
+#         print(X_final[i])
+
+#     b = [1]
+#     a = np.concatenate([[1], np.zeros(N[i]-1), [-0.5, -0.5]])
     
     
-    audioData = signal.lfilter(b, a, X_final[i])
-    audioScaled = preprocessing.minmax_scale(audioData, feature_range=(-1,1))
+#     audioData = signal.lfilter(b, a, X_final[i])
+#     audioScaled = preprocessing.minmax_scale(audioData, feature_range=(-1,1))
     
-    y_final.append(audioScaled); # 3 Task
+#     y_final.append(audioScaled); # 3 Task
 
-if debug:
-    print(np.shape(X_final))
-# static assert ar len == (fd*ts=44100*3=132300)
+# if debug:
+#     print(np.shape(X_final))
+# # static assert ar len == (fd*ts=44100*3=132300)
 
 # 4. Listen to notes:
 def saveNoteAsWav(noteData, samplingRate, filename):
