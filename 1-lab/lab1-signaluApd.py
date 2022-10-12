@@ -31,9 +31,6 @@ class MusicLab:
 
     def countDelays_N(self):
         for i, note in enumerate(self.notes):
-            if self.debug:
-                print(i)
-                print(note)
             self.N[i] = round(self.samplingRate / note) # 1 Task
             
     def generateInput_X(self): # 2 Task
@@ -58,7 +55,7 @@ class MusicLab:
         y_final = []
         for i in range(0, self.STRING_COUNT):
             b = [1]
-            a = np.concatenate([[1], np.zeros(self.N[i]-1), [-0.5, -0.5]])
+            a = np.concatenate([[1], np.zeros(self.N[i]), [-0.5, -0.5]])
             
             audioData = signal.lfilter(b, a, signal_x[i])
             audioScaled = preprocessing.minmax_scale(audioData, feature_range=(-1,1))
@@ -83,7 +80,8 @@ class MusicLab:
         plt.xlabel('t, s')
         plt.ylabel('A')
         plt.grid(True)
-        plt.savefig(self.saveDir + "amp_" + title)
+        plt.savefig(self.saveDir + "amp_" + title,  bbox_inches = 'tight',
+                    pad_inches = 0)
         if show:
             plt.show()
         plt.close()
@@ -104,7 +102,6 @@ class MusicLab:
         k = list(range(0, nfft))
         f_Hz = [i * (self.samplingRate/nfft) for i in k] 
 
-        # fig = plt.figure()
         ax = plt.axes()
         ax.plot(f_Hz, spectrum_db)
         ax.set_xlim(0, self.samplingRate/2)
@@ -113,7 +110,8 @@ class MusicLab:
         plt.xlabel('f, Hz')
         plt.ylabel('S, db')
         plt.grid(True)
-        plt.savefig(self.saveDir + "spec_" + title)
+        plt.savefig(self.saveDir + "spec_" + title,  bbox_inches = 'tight', 
+                    pad_inches = 0)
         if show:
             plt.show()
         plt.close()
@@ -137,6 +135,7 @@ class MusicLab:
         accord = np.zeros(len(allNotes[0])).astype(np.float64)
         for note in notesWithDelay:
             accord = accord + note    
+        accord = preprocessing.minmax_scale(accord, feature_range=(-1,1))
         return accord
     
     # 3.2.1
@@ -163,6 +162,14 @@ class MusicLab:
         a = np.concatenate([[1], np.zeros(int(n_delay-1)), [-K_coef]])
         reverbedSignal = signal.lfilter(b, a, signalIn)
         return reverbedSignal
+    
+    def analyzeDistortion(self, accord_in, k):
+        accordSignal_mod = np.multiply(accord_in, k)
+        distortedAccord = self.nonLinearDistortion(accordSignal_mod)
+        distortedAccord = np.multiply(distortedAccord, 1) # some how it needs to change type
+        self.drawSignal(distortedAccord, f"DistAccord{k}")
+        self.drawSpectrum(distortedAccord, f"DistAccord{k}")
+        self.saveNoteAsWav(distortedAccord, self.samplingRate, f"DistAccord{k}.wav")
 
     
 """ 4. a) 
@@ -198,7 +205,8 @@ def applyFuzz(signal, a = 50):
 ############### main
 
 plt.rcParams.update({'font.family': "Times New Roman"})
-plt.rcParams.update({'font.size': 10})
+plt.rcParams.update({'font.size': 16})
+# plt.rcParams.update({'figure.figsize': (16, 6)})
 
 musicObj = MusicLab(True)
 musicObj.countDelays_N()
@@ -207,59 +215,34 @@ print(f"Signal delays {musicObj.N}")
 signals_X = musicObj.generateInput_X()
 sounds_Y = musicObj.generateSound_Y(signals_X)
 
-for i, audioData in enumerate(sounds_Y):
-    musicObj.saveNoteAsWav(audioData, musicObj.samplingRate, f"Note{i}.wav")
-
 if 1:
     for i, y_sig in enumerate(sounds_Y):
         musicObj.drawSignal(y_sig, musicObj.notesNames[i])
         musicObj.drawSpectrum(y_sig, musicObj.notesNames[i])
+        musicObj.saveNoteAsWav(y_sig, musicObj.samplingRate, f"Note{i}.wav")
 
 if 1:
     accordSignal = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal, "Dm akordas", True)
-    musicObj.drawSpectrum(accordSignal, "Dm akordas", True)
+    musicObj.drawSignal(accordSignal, "Dm akordas")
+    musicObj.drawSpectrum(accordSignal, "Dm akordas")
     musicObj.saveNoteAsWav(accordSignal, musicObj.samplingRate, "accord.wav")
 
-
-# Make wrapper for these 5 functions??
-if 0:
-    K = 30
-    distortedAccord = musicObj.nonLinearDistortion(accordSignal)
-    distortedAccord = np.multiply(distortedAccord, K)
-
-    musicObj.drawSignal(distortedAccord)
-    musicObj.drawSpectrum(distortedAccord)
-    musicObj.saveNoteAsWav(distortedAccord, musicObj.samplingRate, f"DistAccord{K}.wav")
-
 # Analyze how the sound of the chord and its temporal and frequency characteristics change when K = 5 and K = 50.
-if 0:
-    K = 5
-    distortedAccord_5 = musicObj.nonLinearDistortion(accordSignal)
-    distortedAccord_5 = np.multiply(distortedAccord_5, K)
-    musicObj.drawSignal(distortedAccord_5)
-    musicObj.drawSpectrum(distortedAccord_5)
-    musicObj.saveNoteAsWav(distortedAccord_5, musicObj.samplingRate, f"DistAccord{K}.wav")
-
-    K = 50
-    distortedAccord_50 = musicObj.nonLinearDistortion(accordSignal)
-    distortedAccord_50 = np.multiply(distortedAccord_50, K)
-    musicObj.drawSignal(distortedAccord_50)
-    musicObj.drawSpectrum(distortedAccord_50)
-    musicObj.saveNoteAsWav(distortedAccord_50, musicObj.samplingRate, f"DistAccord{K}.wav")
-
-
+if 1:
+    musicObj.analyzeDistortion(accordSignal, k=5)    
+    musicObj.analyzeDistortion(accordSignal, k=50)    
+    
 # 3.2.2 task
 if 0:
     N_ms = 200
     K_reverb = 0.5
 
     accordSignal = musicObj.generateAccord(sounds_Y)
-    accordSignal_rev = musicObj.addReverb(accordSignal, N_ms, K_reverb)
+    accordSignal_s = musicObj.addReverb(accordSignal, N_ms, K_reverb)
 
-    musicObj.drawSignal(accordSignal_rev, musicObj.samplingRate)
-    musicObj.drawSpectrum(accordSignal_rev)
-    musicObj.saveNoteAsWav(accordSignal_rev, musicObj.samplingRate, f"Reverb{K_reverb}.wav")
+    musicObj.drawSignal(accordSignal_s, musicObj.samplingRate)
+    musicObj.drawSpectrum(accordSignal_s)
+    musicObj.saveNoteAsWav(accordSignal_s, musicObj.samplingRate, f"Reverb{K_reverb}.wav")
 
 
 # 4 extra task
