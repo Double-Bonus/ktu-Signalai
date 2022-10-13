@@ -159,7 +159,7 @@ class MusicLab:
         second_ms = 1000
         n_delay =  (N_ms * self.samplingRate / second_ms)
         b = [1]
-        a = np.concatenate([[1], np.zeros(int(n_delay-1)), [-K_coef]])
+        a = np.concatenate([[1], np.zeros(int(n_delay)), [-K_coef]])
         reverbedSignal = signal.lfilter(b, a, signalIn)
         return reverbedSignal
     
@@ -167,8 +167,8 @@ class MusicLab:
         accordSignal_mod = np.multiply(accord_in, k)
         distortedAccord = self.nonLinearDistortion(accordSignal_mod)
         distortedAccord = np.multiply(distortedAccord, 1) # some how it needs to change type
-        self.drawSignal(distortedAccord, f"DistAccord{k}")
-        self.drawSpectrum(distortedAccord, f"DistAccord{k}")
+        self.drawSignal(distortedAccord, f"Dm iškraipytas akordas su satlins K={k}")
+        self.drawSpectrum(distortedAccord, f"Dm iškraipytas akordas su satlins K={k}")
         self.saveNoteAsWav(distortedAccord, self.samplingRate, f"DistAccord{k}.wav")
 
     
@@ -233,16 +233,16 @@ if 1:
     musicObj.analyzeDistortion(accordSignal, k=50)    
     
 # 3.2.2 task
-if 0:
+if 1:
     N_ms = 200
     K_reverb = 0.5
 
     accordSignal = musicObj.generateAccord(sounds_Y)
     accordSignal_s = musicObj.addReverb(accordSignal, N_ms, K_reverb)
 
-    musicObj.drawSignal(accordSignal_s, musicObj.samplingRate)
-    musicObj.drawSpectrum(accordSignal_s)
-    musicObj.saveNoteAsWav(accordSignal_s, musicObj.samplingRate, f"Reverb{K_reverb}.wav")
+    musicObj.drawSignal(accordSignal_s, f"Reverbacija K=05")
+    musicObj.drawSpectrum(accordSignal_s, f"Reverbacija K=05")
+    musicObj.saveNoteAsWav(accordSignal_s, musicObj.samplingRate, f"Reverb.wav")
 
 
 # 4 extra task
