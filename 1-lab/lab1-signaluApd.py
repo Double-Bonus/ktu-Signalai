@@ -138,7 +138,7 @@ class MusicLab:
         accord = preprocessing.minmax_scale(accord, feature_range=(-1,1))
         return accord
     
-    # 3.2.1
+    # 3.2.1 Distortion using satlins
     def nonLinearDistortion(self, signal):
         def satlins(n):
             if (n <= -1):
@@ -229,7 +229,7 @@ if 1:
 
 # Analyze how the sound of the chord and its temporal and frequency characteristics change when K = 5 and K = 50.
 if 1:
-    musicObj.analyzeDistortion(accordSignal, k=5)    
+    musicObj.analyzeDistortion(accordSignal, k=5)
     musicObj.analyzeDistortion(accordSignal, k=50)    
     
 # 3.2.2 task
@@ -240,8 +240,8 @@ if 1:
     accordSignal = musicObj.generateAccord(sounds_Y)
     accordSignal_s = musicObj.addReverb(accordSignal, N_ms, K_reverb)
 
-    musicObj.drawSignal(accordSignal_s, f"Reverbacija K=05")
-    musicObj.drawSpectrum(accordSignal_s, f"Reverbacija K=05")
+    musicObj.drawSignal(accordSignal_s, f"Dm akordas, reverbacija K=05", True) # ahhh Python cannot parse that dot in number
+    musicObj.drawSpectrum(accordSignal_s, f"Dm akordas, reverbacija K=05", True)
     musicObj.saveNoteAsWav(accordSignal_s, musicObj.samplingRate, f"Reverb.wav")
 
 
