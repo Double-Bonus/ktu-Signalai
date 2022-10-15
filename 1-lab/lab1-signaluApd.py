@@ -59,7 +59,6 @@ class MusicLab:
             
             audioData = signal.lfilter(b, a, signal_x[i])
             audioScaled = preprocessing.minmax_scale(audioData, feature_range=(-1,1))
-
             y_final.append(audioScaled); # 3 Task
 
         if self.debug:
@@ -69,8 +68,8 @@ class MusicLab:
     
     # 4. Listen to notes:
     # TODO: sampling rate no need as parameter????
-    def saveNoteAsWav(self, noteData, samplingRate, filename):
-        write(filename=filename, rate=samplingRate, data=noteData.astype(np.float32))
+    def saveNoteAsWav(self, noteData, filename):
+        write(filename=filename, rate=self.samplingRate, data=noteData.astype(np.float32))
         
     def drawSignal(self, signal_y, title, show=False):
         tn = np.linspace(0, self.t_s, num=len(signal_y))
@@ -93,11 +92,6 @@ class MusicLab:
 
         spectrum = np.abs(yf) / nfft
         spectrum_db = 20 * np.log10(spectrum/np.max(spectrum))
-        if 0: # debug TODO: redo
-            print(yf)
-            print(type(yf))
-            print(spectrum)
-            print(spectrum_db)
             
         k = list(range(0, nfft))
         f_Hz = [i * (self.samplingRate/nfft) for i in k] 
@@ -161,6 +155,7 @@ class MusicLab:
         b = [1]
         a = np.concatenate([[1], np.zeros(int(n_delay)), [-K_coef]])
         reverbedSignal = signal.lfilter(b, a, signalIn)
+        reverbedSignal = preprocessing.minmax_scale(reverbedSignal, feature_range=(-1,1))
         return reverbedSignal
     
     def analyzeDistortion(self, accord_in, k):
@@ -169,7 +164,7 @@ class MusicLab:
         distortedAccord = np.multiply(distortedAccord, 1) # some how it needs to change type
         self.drawSignal(distortedAccord, f"Dm iškraipytas akordas su satlins K={k}")
         self.drawSpectrum(distortedAccord, f"Dm iškraipytas akordas su satlins K={k}")
-        self.saveNoteAsWav(distortedAccord, self.samplingRate, f"DistAccord{k}.wav")
+        self.saveNoteAsWav(distortedAccord, f"DistAccord{k}.wav")
 
     
 """ 4. a) 
@@ -184,17 +179,22 @@ def overdrive(signal):
         elif x < -1 and x > -1.000000000000004:
             x = -1
         
+        if(np.abs(x) > 1):
+            print(x)
+        
+        
         if (0 <= np.abs(x) and np.abs(x) < (1/3)):
             return x * 2 * np.abs(x)
         elif ((1/3) <= np.abs(x) and np.abs(x) < (2/3)):
-            return x * (3-(2-(3*np.abs(x))**2 )) / 3
+            return x * (3-(2-(3*np.abs(x)))**2) / 3
         elif ((2/3) <= np.abs(x) and np.abs(x) <= 1):
             return x
         else:
-            print("Incorrect value!!!")
+            print("Incorrect value!!! (out of range -1:1)")
             print(x)
 
     sig_after = [overLambda(i) for i in signal if overLambda(i) is not None]
+    sig_after = np.multiply(sig_after, 1) # That multiplication changes data type to list
     return sig_after
 
 def applyFuzz(signal, a = 50):
@@ -206,80 +206,61 @@ def applyFuzz(signal, a = 50):
 
 plt.rcParams.update({'font.family': "Times New Roman"})
 plt.rcParams.update({'font.size': 16})
-# plt.rcParams.update({'figure.figsize': (16, 6)})
+plt.rcParams.update({'figure.figsize': (16, 6)}) # horizontally longer figure 
 
-musicObj = MusicLab(True)
+musicObj = MusicLab()
 musicObj.countDelays_N()
 print(f"Signal delays {musicObj.N}")
 
 signals_X = musicObj.generateInput_X()
 sounds_Y = musicObj.generateSound_Y(signals_X)
 
-if 1:
+if 0:
     for i, y_sig in enumerate(sounds_Y):
         musicObj.drawSignal(y_sig, musicObj.notesNames[i])
         musicObj.drawSpectrum(y_sig, musicObj.notesNames[i])
-        musicObj.saveNoteAsWav(y_sig, musicObj.samplingRate, f"Note{i}.wav")
+        musicObj.saveNoteAsWav(y_sig, f"Note{i}.wav")
 
-if 1:
+if 0:
     accordSignal = musicObj.generateAccord(sounds_Y)
     musicObj.drawSignal(accordSignal, "Dm akordas")
     musicObj.drawSpectrum(accordSignal, "Dm akordas")
-    musicObj.saveNoteAsWav(accordSignal, musicObj.samplingRate, "accord.wav")
+    musicObj.saveNoteAsWav(accordSignal, "accord.wav")
 
 # Analyze how the sound of the chord and its temporal and frequency characteristics change when K = 5 and K = 50.
-if 1:
+if 0:
     musicObj.analyzeDistortion(accordSignal, k=5)
     musicObj.analyzeDistortion(accordSignal, k=50)    
     
 # 3.2.2 task
-if 1:
+if 0:
     N_ms = 200
     K_reverb = 0.5
 
     accordSignal = musicObj.generateAccord(sounds_Y)
     accordSignal_s = musicObj.addReverb(accordSignal, N_ms, K_reverb)
 
-    musicObj.drawSignal(accordSignal_s, f"Dm akordas, reverbacija K=05", True) # ahhh Python cannot parse that dot in number
-    musicObj.drawSpectrum(accordSignal_s, f"Dm akordas, reverbacija K=05", True)
-    musicObj.saveNoteAsWav(accordSignal_s, musicObj.samplingRate, f"Reverb.wav")
+    musicObj.drawSignal(accordSignal_s, f"Dm akordas, reverbacija K=05") # ahhh Python cannot parse that dot in number
+    musicObj.drawSpectrum(accordSignal_s, f"Dm akordas, reverbacija K=05")
+    musicObj.saveNoteAsWav(accordSignal_s, f"Reverb.wav")
 
 
 # 4 extra task
-if 0:
-    newSounds_Y = musicObj.generateSound_Y(signals_X)
-    overSounds_Y = []
-    for sound in newSounds_Y:
-        print("tests")
-        overSounds_Y.append(overdrive(sound))
-        
+if 1:
     accordSignal_o = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal_o)
-    musicObj.drawSpectrum(accordSignal_o)
+    musicObj.drawSignal(accordSignal_o, "Dm akordas")
+    musicObj.drawSpectrum(accordSignal_o, "Dm akordas")
     
-    newAccordSignal_o = musicObj.generateAccord(overSounds_Y)
-    musicObj.drawSignal(newAccordSignal_o) # TODO: check if thats really zero
-    musicObj.drawSpectrum(newAccordSignal_o)
-    musicObj.saveNoteAsWav(newAccordSignal_o, musicObj.samplingRate, f"OverNew.wav")
-        
-
-    # accordSignal_o = musicObj.generateAccord(sounds_Y)
-    # musicObj.drawSignal(accordSignal_o)
-    # musicObj.drawSpectrum(accordSignal_o)
-    # accordSignal_over = overdrive(accordSignal_o)
-
-    # musicObj.drawSignal(accordSignal_over) # TODO: check if thats really zero
-    # musicObj.drawSpectrum(accordSignal_over)
-    # musicObj.saveNoteAsWav(accordSignal_over, musicObj.samplingRate, f"Over.wav")
+    accordSignal_over = overdrive(accordSignal_o)
+    musicObj.drawSignal(accordSignal_over, "Dm akordas, overdrive") # TODO: check if thats really zero
+    musicObj.drawSpectrum(accordSignal_over, "Dm akordas, overdrive")
+    musicObj.saveNoteAsWav(accordSignal_over, f"Overdrive.wav")
 
 
-if 0:
-    accordSignal_f = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal_f)
-    musicObj.drawSpectrum(accordSignal_f)
-    
-    accordSignal_fuzz = applyFuzz(accordSignal_f, a=15) # or to notes?!?!?!?
-
-    musicObj.drawSignal(accordSignal_fuzz)
-    musicObj.drawSpectrum(accordSignal_fuzz)
-    musicObj.saveNoteAsWav(accordSignal_fuzz, musicObj.samplingRate, f"Fuzz.wav")
+if 1:
+    accordSignal_f = musicObj.generateAccord(sounds_Y)    
+    a = 15
+    accordSignal_fuzz = applyFuzz(accordSignal_f, a)
+    musicObj.drawSignal(accordSignal_fuzz, f"Fuzz, a = {a}")
+    musicObj.drawSpectrum(accordSignal_fuzz, f"Fuzz, a = {a}")
+    musicObj.saveNoteAsWav(accordSignal_fuzz, f"Fuzz a={a}.wav")
