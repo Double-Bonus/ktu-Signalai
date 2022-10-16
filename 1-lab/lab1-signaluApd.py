@@ -1,6 +1,5 @@
 # student number = 10
 # accord = Dm
-
 # f1 = 0 # is not used
 
 import numpy as np
@@ -8,8 +7,6 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io.wavfile import write
 from sklearn import preprocessing
-
-#TODO: implement logger instead of if debug
 
 class MusicLab:
     def __init__(self, debug = False):
@@ -67,7 +64,6 @@ class MusicLab:
         return y_final
     
     # 4. Listen to notes:
-    # TODO: sampling rate no need as parameter????
     def saveNoteAsWav(self, noteData, filename):
         write(filename=filename, rate=self.samplingRate, data=noteData.astype(np.float32))
         
@@ -215,52 +211,46 @@ print(f"Signal delays {musicObj.N}")
 signals_X = musicObj.generateInput_X()
 sounds_Y = musicObj.generateSound_Y(signals_X)
 
-if 0:
-    for i, y_sig in enumerate(sounds_Y):
-        musicObj.drawSignal(y_sig, musicObj.notesNames[i])
-        musicObj.drawSpectrum(y_sig, musicObj.notesNames[i])
-        musicObj.saveNoteAsWav(y_sig, f"Note{i}.wav")
+for i, y_sig in enumerate(sounds_Y):
+    musicObj.drawSignal(y_sig, musicObj.notesNames[i])
+    musicObj.drawSpectrum(y_sig, musicObj.notesNames[i])
+    musicObj.saveNoteAsWav(y_sig, f"Note{i}.wav")
 
-if 0:
-    accordSignal = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal, "Dm akordas")
-    musicObj.drawSpectrum(accordSignal, "Dm akordas")
-    musicObj.saveNoteAsWav(accordSignal, "accord.wav")
+accordSignal = musicObj.generateAccord(sounds_Y)
+musicObj.drawSignal(accordSignal, "Dm akordas")
+musicObj.drawSpectrum(accordSignal, "Dm akordas")
+musicObj.saveNoteAsWav(accordSignal, "accord.wav")
 
 # Analyze how the sound of the chord and its temporal and frequency characteristics change when K = 5 and K = 50.
-if 0:
-    musicObj.analyzeDistortion(accordSignal, k=5)
-    musicObj.analyzeDistortion(accordSignal, k=50)    
+musicObj.analyzeDistortion(accordSignal, k=5)
+musicObj.analyzeDistortion(accordSignal, k=50)    
     
 # 3.2.2 task
-if 0:
-    N_ms = 200
-    K_reverb = 0.5
+N_ms = 200
+K_reverb = 0.5
 
-    accordSignal = musicObj.generateAccord(sounds_Y)
-    accordSignal_s = musicObj.addReverb(accordSignal, N_ms, K_reverb)
+accordSignal = musicObj.generateAccord(sounds_Y)
+accordSignal_s = musicObj.addReverb(accordSignal, N_ms, K_reverb)
 
-    musicObj.drawSignal(accordSignal_s, f"Dm akordas, reverbacija K=05") # ahhh Python cannot parse that dot in number
-    musicObj.drawSpectrum(accordSignal_s, f"Dm akordas, reverbacija K=05")
-    musicObj.saveNoteAsWav(accordSignal_s, f"Reverb.wav")
+musicObj.drawSignal(accordSignal_s, f"Dm akordas, reverbacija K=05") # ahhh Python cannot parse that dot in number
+musicObj.drawSpectrum(accordSignal_s, f"Dm akordas, reverbacija K=05")
+musicObj.saveNoteAsWav(accordSignal_s, f"Reverb.wav")
 
 
 # 4 extra task
-if 1:
-    accordSignal_o = musicObj.generateAccord(sounds_Y)
-    musicObj.drawSignal(accordSignal_o, "Dm akordas")
-    musicObj.drawSpectrum(accordSignal_o, "Dm akordas")
-    
-    accordSignal_over = overdrive(accordSignal_o)
-    musicObj.drawSignal(accordSignal_over, "Dm akordas, overdrive") # TODO: check if thats really zero
-    musicObj.drawSpectrum(accordSignal_over, "Dm akordas, overdrive")
-    musicObj.saveNoteAsWav(accordSignal_over, f"Overdrive.wav")
+accordSignal_o = musicObj.generateAccord(sounds_Y)
+musicObj.drawSignal(accordSignal_o, "Dm akordas")
+musicObj.drawSpectrum(accordSignal_o, "Dm akordas")
+
+accordSignal_over = overdrive(accordSignal_o)
+musicObj.drawSignal(accordSignal_over, "Dm akordas, overdrive") # TODO: check if thats really zero
+musicObj.drawSpectrum(accordSignal_over, "Dm akordas, overdrive")
+musicObj.saveNoteAsWav(accordSignal_over, f"Overdrive.wav")
 
 
-if 1:
-    accordSignal_f = musicObj.generateAccord(sounds_Y)    
-    a = 15
-    accordSignal_fuzz = applyFuzz(accordSignal_f, a)
-    musicObj.drawSignal(accordSignal_fuzz, f"Fuzz, a = {a}")
-    musicObj.drawSpectrum(accordSignal_fuzz, f"Fuzz, a = {a}")
-    musicObj.saveNoteAsWav(accordSignal_fuzz, f"Fuzz a={a}.wav")
+accordSignal_f = musicObj.generateAccord(sounds_Y)    
+a = 15
+accordSignal_fuzz = applyFuzz(accordSignal_f, a)
+musicObj.drawSignal(accordSignal_fuzz, f"Fuzz, a = {a}")
+musicObj.drawSpectrum(accordSignal_fuzz, f"Fuzz, a = {a}")
+musicObj.saveNoteAsWav(accordSignal_fuzz, f"Fuzz a={a}.wav")
