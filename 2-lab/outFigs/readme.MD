@@ -1,0 +1,1 @@
+All generated figures should be placed here

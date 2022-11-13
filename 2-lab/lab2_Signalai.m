@@ -1,14 +1,15 @@
-clc
-clear all
-close all
-   
+clc, clear, close all
+
+set(0,'defaultAxesFontName','TimesNewRoman')
+set(0,'defaultAxesFontSize',10)
+
 load("signalai/EKG_13")
 fd = 500; %add _Hz            % Diskretizavimo freq
 ts = 11;             
 t =(0:(ts*fd)-1)*1/fd;
 
 %Noramlius font size ir db iki -80
-figure_cnt = 1;
+
 
 %% 3.3.1 RIR filtras
 
@@ -19,41 +20,41 @@ a = zeros(1,length(b));
 a(1) = 1;
 
 ekg_filtered = filter(b, a, ekg);
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 plot(t, ekg_filtered)
 
 %% 3.3.2
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 impz(b, a);
+ylabel("Amplitude"); xlabel('n'); title('RIR filtro impulsine charakteristika'); xlim([0 14]); grid on;
+f_saveFig("3.3.2-RirImpls")
 
 %% 3.3.3
-n = 15000;
-figure(figure_cnt); figure_cnt=figure_cnt+1;
-freqz(b, a, n, fd)
-datacursormode('on')
+f_plotFreqz(b, a, fd, "3.3.3-amplitFazesChar")
 
 
 %% 3.3.4
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure()
 zplane(b,a)
-
+grid on; title('Filtro poliu nuliu diagrama');
+f_saveFig("3.3.4-RirZeroPole")
 
 %% 3.3.5
-%% plot for time
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+% plot for time
+figure()
 subplot(211); 
 plot(t, ekg); 
-title('Laiko sritis prie? RIR');
-% xlabel('t, s'); ylabel('A, mV'); xlim(T_DISP); grid on;
+xlabel('t, s'); ylabel('A, mV');
+grid on; title('Laiko sritis, EKG nefiltruotas');
+
 subplot(212); 
 plot(t, ekg_filtered);
-title('Laiko sritis po RIR');
-% xlabel('t, s'); ylabel('A, mV'); xlim(T_DISP); grid on;
-
+xlabel('t, s'); ylabel('A, mV');
+grid on; title('Laiko sritis, EKG naudojant RIR filtra');
+f_saveFig("3.3.5-EkgCompare", true)
 
 %% plot freq: plot signal in freqency domain
-% (Same as in 1 Lab) - use function
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure()
 
 nfft = length(ekg);
 ekg_freq = abs(fft(ekg))/nfft;    
@@ -61,23 +62,18 @@ ekg_freq = 20*log10(ekg_freq/max(ekg_freq));
 k = 0:1:nfft-1;                 
 f = k*fd/nfft;                  
 
-
 subplot(211)
-plot(f, ekg_freq, 'k');
-xlabel('f, Hz')
-ylabel('Sa, dB')
-title('Signalo spektras pries apdorojima')
-xlim([0 fd/2])
+plot(f, ekg_freq);
+xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-120 0]);
+grid on; title('Signalo spektras, EKG nefiltruotas')
 
 ekgFilter_freq = abs(fft(ekg_filtered))/nfft;    
 ekgFilter_freq = 20*log10(ekgFilter_freq/max(ekgFilter_freq));  
 subplot(212)
-plot(f, ekgFilter_freq, 'k');
-xlabel('f, Hz')
-ylabel('Sa, dB')
-title('Signalo spektras po RIR apdorojimo')
-xlim([0 fd/2])
-
+plot(f, ekgFilter_freq);
+xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-120 0]);
+grid on; title('Signalo spektras, EKG naudojant RIR filtra')
+f_saveFig("3.3.5-EkgCompareFreq", true)
 
 %% 3.4 NIR Filtras
 
@@ -111,7 +107,7 @@ aNIR = [1, zeros(1,N-1), -k3];
 ekg_afterNIR = filter(bNIR, aNIR, ekg_filtered);
 
 % analyzsis
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 
 %3.4.7
 impz(bNIR, aNIR);
@@ -120,20 +116,21 @@ xlim([0 100]);
 title('Impusline charakteristika');
 
 %3.4.8
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
+n=15000;
 freqz(bNIR, aNIR, n, fd)
 title('NIR analize');
 ylim([-50 5])
 
 % 3.4.9
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 zplane(bNIR, aNIR)
 title('NIR zplane');
 
 
 % 3.4.10
 % plot for time
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 subplot(211); 
 plot(t, ekg); 
 title('Laiko sritis neapdoroto ekg');
@@ -147,7 +144,7 @@ title('Laiko sritis po NIR');
 
 % plot freq: plot signal in freqency domain
 % (Same as in 1 Lab) - use function
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 
 nfft = length(ekg);
 ekg_freq = abs(fft(ekg))/nfft;    
@@ -157,7 +154,7 @@ f = k*fd/nfft;
 
 
 subplot(211)
-plot(f, ekg_freq, 'k');
+plot(f, ekg_freq);
 xlabel('f, Hz')
 ylabel('Sa, dB')
 title('Signalo spektras neapdoroto ekg')
@@ -166,21 +163,36 @@ xlim([0 fd/2])
 ekg_afterNIR_fq = abs(fft(ekg_afterNIR))/nfft;    
 ekg_afterNIR_fq = 20*log10(ekg_afterNIR_fq/max(ekg_afterNIR_fq));  
 subplot(212)
-plot(f, ekg_afterNIR_fq, 'k');
+plot(f, ekg_afterNIR_fq);
 xlabel('f, Hz')
 ylabel('Sa, dB')
 title('Signalo spektras po NIR apdorojimo')
 xlim([0 fd/2])
 
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 f_plotAllSignalsTime(t, ekg, ekg_filtered, ekg_afterNIR)
 
 
-figure(figure_cnt); figure_cnt=figure_cnt+1;
+figure();
 f_plotAllSignalsFreq(ekg, ekg_filtered, ekg_afterNIR, fd)
 
-function f_plotAllSignalsTime(t, initial, RIR, NIR)
 
+function f_saveFig(figName, usingSubplots)
+    if ~exist('usingSubplots','var')
+      usingSubplots = false; % third parameter does not exist, so default it to something
+    end
+
+    set(gca, 'units', 'normalized'); %Just making sure it's normalized
+    Tight = get(gca, 'TightInset');  %Gives you the bording spacing between plot box and any axis labels
+                                     %[Left Bottom Right Top] spacing
+    NewPos = [Tight(1) Tight(2) 1-Tight(1)-Tight(3) 1-Tight(2)-Tight(4)]; %New plot position [X Y W H]
+    if usingSubplots == false % matlab fucks up subplots
+        set(gca, 'Position', NewPos);
+    end
+    saveas(gca,"outFigs/"+figName+".jpg");
+end
+
+function f_plotAllSignalsTime(t, initial, RIR, NIR)
     subplot(311)
     plot(t, initial); 
     title('Laiko sritis neapdoroto ekg');
@@ -191,11 +203,9 @@ function f_plotAllSignalsTime(t, initial, RIR, NIR)
     subplot(313); 
     plot(t, NIR);
     title('Laiko sritis po RIR ir NIR');
-    
 end
 
 function f_plotAllSignalsFreq(initial, RIR, NIR, fd)
-
     subplot(311)
     [x1, y1] = getFreqOfSignal(initial, fd);
     plot(x1, y1); 
@@ -213,11 +223,9 @@ function f_plotAllSignalsFreq(initial, RIR, NIR, fd)
     plot(x3, y3); 
     title('Dazniu sritis po RIR ir NIR');
     xlim([0 fd/2])
-    
 end
 
 function [x_fq, y_fq] = getFreqOfSignal(sig, fd)
-
     nfft = length(sig);
     sig_fq = abs(fft(sig))/nfft;    
     sig_fq = 20*log10(sig_fq/max(sig_fq));   
@@ -225,5 +233,22 @@ function [x_fq, y_fq] = getFreqOfSignal(sig, fd)
     
     x_fq = k*fd/nfft;
     y_fq = sig_fq;
+end
 
+
+function f_plotFreqz(b, a, fd, figName)
+    n = 15000;
+    figure();
+    [h_fq,w_fq] = freqz(b, a, n, fd);
+    
+    subplot(211)
+    plot(w_fq, 20*log10(abs(h_fq)))
+    xlabel('f, Hz'); ylabel('A, dB'); ylim([-80 3]);
+    title('Amplitudes daznine charakteristika'); grid on
+    
+    subplot(212)
+    plot(w_fq, 360/(2*pi)*unwrap(angle(h_fq)))
+    xlabel('f, Hz'); ylabel('Faze, laipsniai')
+    title('Fazes daznine charakteristika'); grid on
+    f_saveFig(figName, true);
 end
