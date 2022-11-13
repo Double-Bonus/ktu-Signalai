@@ -46,12 +46,28 @@ end
 
 
 % Decimation
-ekg_1 = decimate(ekg, D1, 'fir');
-ekg_2 = decimate(ekg_1, D2, 'fir');
+if 0 % using matlab API
+    ekg_1 = decimate(ekg, D1, 'fir');
+    ekg_2 = decimate(ekg_1, D2, 'fir');
+    current_FD = f_d_Hz / (D1 * D2)
+else
+    b_down1_H1 = fir1(30,(20/(f_d_Hz/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(20) < (500 / 2*10) 
+    [b_H1_fqH, b_H1_fqW] =  freqz(b_down1_H1, 1, 15000, f_d_Hz);
+    ekg_1 = filter(b_down1_H1, 1, ekg);
+    ekg_1 = downsample(ekg_1, D1);
+    current_FD = f_d_Hz / D1;
+    
+    
+    b_down2_H2 = fir1(30,(4/(current_FD/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(4) < (50 / 2*5) 
+    [b_H2_fqH, b_H2_fqW] =  freqz(b_down2_H2, 1, 15000, current_FD);
+    ekg_2 = filter(b_down2_H2, 1, ekg_1);
+    ekg_2 = downsample(ekg_2, D2);
+    current_FD = current_FD / D2;
+end
+
 
 % Low-pass filtras
-current_FD = f_d_Hz / (D1 * D2)
-b_lowPass = fir1(51,(0.67/(current_FD/2)),'low');
+b_lowPass = fir1(51, (0.67/(current_FD/2)));
 [B_H_freqz,B_Hw_freqz] =  freqz(b_lowPass, 1, 15000, f_d_Hz);
 freqz(b_lowPass, 1, 15000, current_FD);
 ekg_3 = filter(b_lowPass, 1, ekg_2);
