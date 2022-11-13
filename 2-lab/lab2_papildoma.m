@@ -1,9 +1,6 @@
-clc
-clear all
-close all
+clc, clear, close all;
    
 load("signalai/EKG_13")
-
 
 f_SL_Hz = 1; % projektuojamo ?em?j? da?ni? filtro slopinimo juostos ribinis da?ni
 f_pr_Hz = 0.4; % pralaidumo juostos ribinis da?nis
@@ -31,20 +28,14 @@ D2_opt = M/D1_opt
 
 D1 = 10
 D2 = 5
-
-
 if D1*D2 ~= M
     disp("error");
 end  
 
-%pries paduodant naudoiti ta pati filtra kai p1 uzduotyje??
-
 %%
-
-
+%pries paduodant naudoiti ta pati filtra kai p1 uzduotyje??
 % low-pass filter before analysis
 % firls
-
 
 % Decimation
 if 0 % using matlab API
@@ -76,8 +67,6 @@ if 1 % usisng MATLAB API
     ekg_4 = interp(ekg_3, D2);
     ekg_5 = interp(ekg_4, D1); % dreifo linija
 else % make filter ourself
-    
-   
     ekg_4 = upsample(ekg_3, D2);
     ekg_4 = filter(b_safety_H2, 1, ekg_4);
     ekg_4_itr = interp(ekg_3, D2);
@@ -97,11 +86,7 @@ else % make filter ourself
 end
 ekg_6 = ekg - ekg_5;
 
-
-% [B,A] = cheby2(12,60,50/250,'low');
-% ekg_6 = filter(B,A,ekg_6);
-
-% pacioje pradziojevelinnimas????
+% check this API:
 % grpdelay()
 
 
@@ -112,13 +97,10 @@ title('Laiko sritis: pradinis EKG');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
-
-
 subplot(312); 
 plot(time_n, ekg_5); 
 title('Laiko sritis: Dreifas');
 xlabel('t, s'); ylabel('A, mV'); grid on;
-
 
 
 subplot(313); 
@@ -127,9 +109,7 @@ title('Laiko sritis: po multirat- RIR');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
-
-% try with delay
-velinimas = length(b_lowPass)*D1*D2/2 %TODO get legit value here
+% delay of filter
 velinimas = length(b_safety_H1) + length(b_safety_H2)*D1 + length(b_lowPass)*D1*D2/2
 
 
@@ -156,9 +136,3 @@ subplot(313);
 plot(time_n, dreif_withZeros(velinimas+1:end)); 
 title('Laiko sritis: dreifas');
 xlabel('t, s'); ylabel('A, mV'); grid on;
-
-
-
-%% 4.3 Filter testing
-
-
