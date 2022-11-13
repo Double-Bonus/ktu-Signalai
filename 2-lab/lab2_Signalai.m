@@ -132,7 +132,7 @@ title('NIR zplane');
 
 
 % 3.4.10
-    % plot for time
+% plot for time
 figure(figure_cnt); figure_cnt=figure_cnt+1;
 subplot(211); 
 plot(t, ekg); 
@@ -227,4 +227,3 @@ function [x_fq, y_fq] = getFreqOfSignal(sig, fd)
     y_fq = sig_fq;
 
 end
-

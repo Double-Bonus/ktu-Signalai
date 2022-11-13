@@ -41,6 +41,7 @@ end
 
 %%
 
+
 % low-pass filter before analysis
 % firls
 
@@ -51,33 +52,54 @@ if 0 % using matlab API
     ekg_2 = decimate(ekg_1, D2, 'fir');
     current_FD = f_d_Hz / (D1 * D2)
 else
-    b_down1_H1 = fir1(30,(20/(f_d_Hz/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(20) < (500 / 2*10) 
-    [b_H1_fqH, b_H1_fqW] =  freqz(b_down1_H1, 1, 15000, f_d_Hz);
-    ekg_1 = filter(b_down1_H1, 1, ekg);
+    b_safety_H1 = fir1(30,(20/(f_d_Hz/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(20) < (500 / 2*10) 
+    [b_H1_fqH, b_H1_fqW] =  freqz(b_safety_H1, 1, 15000, f_d_Hz);
+    ekg_1 = filter(b_safety_H1, 1, ekg);
     ekg_1 = downsample(ekg_1, D1);
     current_FD = f_d_Hz / D1;
     
     
-    b_down2_H2 = fir1(30,(4/(current_FD/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(4) < (50 / 2*5) 
-    [b_H2_fqH, b_H2_fqW] =  freqz(b_down2_H2, 1, 15000, current_FD);
-    ekg_2 = filter(b_down2_H2, 1, ekg_1);
+    b_safety_H2 = fir1(30,(4/(current_FD/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(4) < (50 / 2*5) 
+    [b_H2_fqH, b_H2_fqW] =  freqz(b_safety_H2, 1, 15000, current_FD);
+    ekg_2 = filter(b_safety_H2, 1, ekg_1);
     ekg_2 = downsample(ekg_2, D2);
     current_FD = current_FD / D2;
 end
 
-
 % Low-pass filtras
-b_lowPass = fir1(51, (0.67/(current_FD/2)));
-[B_H_freqz,B_Hw_freqz] =  freqz(b_lowPass, 1, 15000, f_d_Hz);
-freqz(b_lowPass, 1, 15000, current_FD);
+b_lowPass = fir1(40, (0.67/(current_FD/2)));
+[B_H_freqz,B_Hw_freqz] =  freqz(b_lowPass, 1, 15000, current_FD);
 ekg_3 = filter(b_lowPass, 1, ekg_2);
 
 
-% LEVEL 1 UPSAMPLE
-ekg_4 = interp(ekg_3, D2);
-ekg_5 = interp(ekg_4, D1); % dreifo linija
-
+if 1 % usisng MATLAB API
+    ekg_4 = interp(ekg_3, D2);
+    ekg_5 = interp(ekg_4, D1); % dreifo linija
+else % make filter ourself
+    
+   
+    ekg_4 = upsample(ekg_3, D2);
+    ekg_4 = filter(b_safety_H2, 1, ekg_4);
+    ekg_4_itr = interp(ekg_3, D2);
+    ekg_4_diff = ekg_4_itr - ekg_4
+    disp('Diff')
+    sum(abs(ekg_4_diff))
+    ekg_4 = ekg_4 * D2;
+    ekg_4_diff = ekg_4_itr - ekg_4;
+    disp('Diff padauginus')
+    sum(abs(ekg_4_diff))
+    
+    ekg_5 = upsample(ekg_4, D1);
+    ekg_5 = filter(b_safety_H2, 1, ekg_5);
+    ekg_5 = ekg_5 * D1;
+    
+  
+end
 ekg_6 = ekg - ekg_5;
+
+
+% [B,A] = cheby2(12,60,50/250,'low');
+% ekg_6 = filter(B,A,ekg_6);
 
 % pacioje pradziojevelinnimas????
 % grpdelay()
@@ -86,7 +108,7 @@ ekg_6 = ekg - ekg_5;
 figure(2)
 subplot(311); 
 plot(time_n, ekg); 
-title('Laiko sritis prie? RIR');
+title('Laiko sritis: pradinis EKG');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
@@ -94,20 +116,21 @@ xlabel('t, s'); ylabel('A, mV'); grid on;
 
 subplot(312); 
 plot(time_n, ekg_5); 
-title('Laiko sritis po RIR');
+title('Laiko sritis: Dreifas');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
 
 subplot(313); 
 plot(time_n, ekg_6); 
-title('Laiko sritis po RIR');
+title('Laiko sritis: po multirat- RIR');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
 
 % try with delay
 velinimas = length(b_lowPass)*D1*D2/2 %TODO get legit value here
+velinimas = length(b_safety_H1) + length(b_safety_H2)*D1 + length(b_lowPass)*D1*D2/2
 
 
 ekg_withZeros = [zeros(1, velinimas), ekg];
@@ -118,23 +141,24 @@ ekg_noDreif = ekg_withZeros - dreif_withZeros;
 figure(3)
 subplot(311); 
 plot(time_n, ekg_withZeros(velinimas+1:end)); 
-title('Laiko sritis prie? RIR');
+title('Laiko sritis: padinis EKG');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
 subplot(312); 
 plot(time_n, ekg_noDreif(velinimas+1:end)); 
-title('Laiko sritis po RIR');
+title('Laiko sritis: nuemus dreifa');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
 
 subplot(313); 
 plot(time_n, dreif_withZeros(velinimas+1:end)); 
-title('Laiko sritis po RIR');
+title('Laiko sritis: dreifas');
 xlabel('t, s'); ylabel('A, mV'); grid on;
 
 
 
+%% 4.3 Filter testing
 
 
