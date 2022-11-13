@@ -1,6 +1,8 @@
 *.png
+*.jpg
 *.wav
 *.zip
 *.rar
 *.txt
 *.asv
+*signalai/
