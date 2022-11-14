@@ -2,8 +2,8 @@ clc, clear, close all;
    
 load("signalai/EKG_13")
 
-f_SL_Hz = 1; % projektuojamo ?em?j? da?ni? filtro slopinimo juostos ribinis da?ni
-f_pr_Hz = 0.4; % pralaidumo juostos ribinis da?nis
+f_SL_Hz = 1; % projektuojamo iemeji dazni? filtro slopinimo juostos ribinis dazni
+f_pr_Hz = 0.4; % pralaidumo juostos ribinis daznis
 f_d_Hz = 500;
 
 time_s = 11;             
@@ -47,42 +47,39 @@ else
     [b_H1_fqH, b_H1_fqW] =  freqz(b_safety_H1, 1, 15000, f_d_Hz);
     ekg_1 = filter(b_safety_H1, 1, ekg);
     ekg_1 = downsample(ekg_1, D1);
+    figure()
+    freqz(b_safety_H1, 1, 20000, f_d_Hz);  % should be atleast -50dB
     current_FD = f_d_Hz / D1;
-    
     
     b_safety_H2 = fir1(30,(4/(current_FD/2))); % Naudojamas panasus filtras i decimate (filtro eile = 30; fp(4) < (50 / 2*5) 
     [b_H2_fqH, b_H2_fqW] =  freqz(b_safety_H2, 1, 15000, current_FD);
     ekg_2 = filter(b_safety_H2, 1, ekg_1);
     ekg_2 = downsample(ekg_2, D2);
+    figure()
+    freqz(b_safety_H2, 1, 20000, current_FD);  % should be atleast -50dB
     current_FD = current_FD / D2;
 end
 
 % Low-pass filtras
 b_lowPass = fir1(40, (0.67/(current_FD/2)));
 [B_H_freqz,B_Hw_freqz] =  freqz(b_lowPass, 1, 15000, current_FD);
+figure()
+freqz(b_safety_H2, 1, 20000, current_FD); % should be atleast -50dB
 ekg_3 = filter(b_lowPass, 1, ekg_2);
 
 
 if 0 % usisng MATLAB API
     ekg_4 = interp(ekg_3, D2);
-    ekg_5 = interp(ekg_4, D1); % dreifo linija
+    ekg_5 = interp(ekg_4, D1); % dreifas
 else % make filter ourself
     ekg_4 = upsample(ekg_3, D2);
     ekg_4 = filter(b_safety_H2, 1, ekg_4);
-    ekg_4_itr = interp(ekg_3, D2);
-    ekg_4_diff = ekg_4_itr - ekg_4
-    disp('Diff')
-    sum(abs(ekg_4_diff))
     ekg_4 = ekg_4 * D2;
-    ekg_4_diff = ekg_4_itr - ekg_4;
-    disp('Diff padauginus')
-    sum(abs(ekg_4_diff))
     
     ekg_5 = upsample(ekg_4, D1);
     ekg_5 = filter(b_safety_H1, 1, ekg_5);
     ekg_5 = ekg_5 * D1;
     
-  
 end
 ekg_6 = ekg - ekg_5;
 
@@ -90,7 +87,7 @@ ekg_6 = ekg - ekg_5;
 % grpdelay()
 
 
-figure(2)
+figure()
 subplot(311); 
 plot(time_n, ekg); 
 title('Laiko sritis: pradinis EKG');
@@ -118,7 +115,7 @@ dreif_withZeros = [ekg_5, zeros(1, velinimas)];
 
 
 ekg_noDreif = ekg_withZeros - dreif_withZeros;
-figure(3)
+figure()
 subplot(311); 
 plot(time_n, ekg_withZeros(velinimas+1:end)); 
 title('Laiko sritis: padinis EKG');

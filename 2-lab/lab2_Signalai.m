@@ -39,8 +39,7 @@ zplane(b,a)
 grid on; title('Filtro poliu nuliu diagrama');
 f_saveFig("3.3.4-RirZeroPole")
 
-%% 3.3.5
-% plot for time
+%% 3.3.5 - plot for time
 figure()
 subplot(211); 
 plot(t, ekg); 
@@ -83,7 +82,7 @@ fDelta_Hz = 1.5;
 f0_Hz = 50;
 K0 = 1;
 L = 3;
-S = mag2db(150); % double check
+S = mag2db(150);
 
 %3.4.2
 K = K0 * 10^(-S/20);
@@ -122,46 +121,44 @@ zplane(bNIR, aNIR)
 grid on; title('NIR filtro poliu nuliu diagrama');
 f_saveFig("3.4.9-NirZeroPole")
 
-% 3.4.10
-% plot for time
+% 3.4.10 - plot for time
 figure();
 subplot(211); 
-plot(t, ekg); 
-title('Laiko sritis neapdoroto ekg');
-% xlabel('t, s'); ylabel('A, mV'); xlim(T_DISP); grid on;
+plot(t, ekg_filtered);
+xlabel('t, s'); ylabel('A, mV');
+grid on; title('Laiko sritis, EKG signalas po RIR filtro');
+
 subplot(212); 
 plot(t, ekg_afterNIR);
-title('Laiko sritis po NIR');
-% xlabel('t, s'); ylabel('A, mV'); xlim(T_DISP); grid on;
-
-
+xlabel('t, s'); ylabel('A, mV');
+grid on; title('Laiko sritis, EKG signalas po RIR ir NIR filtru');
+f_saveFig("3.4.10-EkgCompare", true)
 
 % plot freq: plot signal in freqency domain
 % (Same as in 1 Lab) - use function
 figure();
 
-nfft = length(ekg);
-ekg_freq = abs(fft(ekg))/nfft;    
+nfft = length(ekg_filtered);
+ekg_freq = abs(fft(ekg_filtered))/nfft;    
 ekg_freq = 20*log10(ekg_freq/max(ekg_freq));   
 k = 0:1:nfft-1;                 
 f = k*fd/nfft;                  
 
-
 subplot(211)
 plot(f, ekg_freq);
-xlabel('f, Hz')
-ylabel('Sa, dB')
-title('Signalo spektras neapdoroto ekg')
-xlim([0 fd/2])
+xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-150 0]);
+grid on; title('Signalas dazniu srityje, EKG po RIR filtro')
+
 
 ekg_afterNIR_fq = abs(fft(ekg_afterNIR))/nfft;    
 ekg_afterNIR_fq = 20*log10(ekg_afterNIR_fq/max(ekg_afterNIR_fq));  
 subplot(212)
 plot(f, ekg_afterNIR_fq);
-xlabel('f, Hz')
-ylabel('Sa, dB')
-title('Signalo spektras po NIR apdorojimo')
-xlim([0 fd/2])
+xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-150 0]);
+grid on; title('Signalas dazniu srityje, EKG po RIR ir NIR filtro')
+f_saveFig("3.4.10-EkgCompareFreq", true)
+
+
 
 figure();
 f_plotAllSignalsTime(t, ekg, ekg_filtered, ekg_afterNIR)
@@ -228,7 +225,6 @@ function [x_fq, y_fq] = getFreqOfSignal(sig, fd)
     x_fq = k*fd/nfft;
     y_fq = sig_fq;
 end
-
 
 function f_plotFreqz(b, a, fd, figName)
     n = 15000;

@@ -63,7 +63,6 @@ plot(t, yNir)
 title('NIR suku tipo filtras filtras')
 
 
-
 function [out_y, velinimas] = f_getMultirate(sig_y, f_d_Hz)
     D1 = 10
     D2 = 5
@@ -82,9 +81,17 @@ function [out_y, velinimas] = f_getMultirate(sig_y, f_d_Hz)
     % Low-pass filtras
     b_lowPass = fir1(40, (0.67/(current_FD/2)));
     ekg_3 = filter(b_lowPass, 1, ekg_2);
-
-    ekg_4 = interp(ekg_3, D2);
-    ekg_5 = interp(ekg_4, D1); % dreifo linija
+    
+    ekg_4 = upsample(ekg_3, D2);
+    ekg_4 = filter(b_safety_H2, 1, ekg_4);
+    ekg_4 = ekg_4 * D2;
+    
+    ekg_5 = upsample(ekg_4, D1);
+    ekg_5 = filter(b_safety_H1, 1, ekg_5);
+    ekg_5 = ekg_5 * D1; % dreifas
+    
+    
+    
     ekg_6 = sig_y - ekg_5;
 
     velinimas = length(b_safety_H1) + length(b_safety_H2)*D1 + length(b_lowPass)*D1*D2/2
