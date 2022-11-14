@@ -107,26 +107,20 @@ aNIR = [1, zeros(1,N-1), -k3];
 ekg_afterNIR = filter(bNIR, aNIR, ekg_filtered);
 
 % analyzsis
-figure();
-
 %3.4.7
+figure();
 impz(bNIR, aNIR);
-grid on;
-xlim([0 100]);
-title('Impusline charakteristika');
+ylabel("Amplitude"); xlabel('n'); title('NIR filtro impulsine charakteristika'); grid on;
+f_saveFig("3.4.7-NirImpls")
 
 %3.4.8
-figure();
-n=15000;
-freqz(bNIR, aNIR, n, fd)
-title('NIR analize');
-ylim([-50 5])
+f_plotFreqz(bNIR, aNIR, fd, "3.4.8-amplitFazesCharNIR")
 
 % 3.4.9
 figure();
 zplane(bNIR, aNIR)
-title('NIR zplane');
-
+grid on; title('NIR filtro poliu nuliu diagrama');
+f_saveFig("3.4.9-NirZeroPole")
 
 % 3.4.10
 % plot for time
