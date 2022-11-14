@@ -63,7 +63,7 @@ b_lowPass = fir1(40, (0.67/(current_FD/2)));
 ekg_3 = filter(b_lowPass, 1, ekg_2);
 
 
-if 1 % usisng MATLAB API
+if 0 % usisng MATLAB API
     ekg_4 = interp(ekg_3, D2);
     ekg_5 = interp(ekg_4, D1); % dreifo linija
 else % make filter ourself
@@ -79,7 +79,7 @@ else % make filter ourself
     sum(abs(ekg_4_diff))
     
     ekg_5 = upsample(ekg_4, D1);
-    ekg_5 = filter(b_safety_H2, 1, ekg_5);
+    ekg_5 = filter(b_safety_H1, 1, ekg_5);
     ekg_5 = ekg_5 * D1;
     
   
