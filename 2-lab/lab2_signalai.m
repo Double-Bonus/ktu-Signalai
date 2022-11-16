@@ -8,8 +8,6 @@ fd = 500; %add _Hz            % Diskretizavimo freq
 ts = 11;             
 t =(0:(ts*fd)-1)*1/fd;
 
-%Noramlius font size ir db iki -80
-
 
 %% 3.3.1 RIR filtras
 
@@ -50,7 +48,7 @@ subplot(212);
 plot(t, ekg_filtered);
 xlabel('t, s'); ylabel('A, mV');
 grid on; title('Laiko sritis, EKG naudojant RIR filtra');
-f_saveFig("3.3.5-EkgCompare", true)
+f_saveFig("3.3.5-EkgCompare", true);
 
 %% plot freq: plot signal in freqency domain
 figure()
@@ -64,15 +62,15 @@ f = k*fd/nfft;
 subplot(211)
 plot(f, ekg_freq);
 xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-120 0]);
-grid on; title('Signalo spektras, EKG nefiltruotas')
+grid on; title('Signalo spektras, EKG nefiltruotas');
 
 ekgFilter_freq = abs(fft(ekg_filtered))/nfft;    
 ekgFilter_freq = 20*log10(ekgFilter_freq/max(ekgFilter_freq));  
 subplot(212)
 plot(f, ekgFilter_freq);
 xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-120 0]);
-grid on; title('Signalo spektras, EKG naudojant RIR filtra')
-f_saveFig("3.3.5-EkgCompareFreq", true)
+grid on; title('Signalo spektras, EKG naudojant RIR filtra');
+f_saveFig("3.3.5-EkgCompareFreq", true);
 
 %% 3.4 NIR Filtras
 
@@ -149,7 +147,6 @@ plot(f, ekg_freq);
 xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-150 0]);
 grid on; title('Signalas dazniu srityje, EKG po RIR filtro')
 
-
 ekg_afterNIR_fq = abs(fft(ekg_afterNIR))/nfft;    
 ekg_afterNIR_fq = 20*log10(ekg_afterNIR_fq/max(ekg_afterNIR_fq));  
 subplot(212)
@@ -158,15 +155,12 @@ xlabel('f, Hz'); ylabel('Sa, dB'); xlim([0 fd/2]); ylim([-150 0]);
 grid on; title('Signalas dazniu srityje, EKG po RIR ir NIR filtro')
 f_saveFig("3.4.10-EkgCompareFreq", true)
 
-
-
 figure();
 f_plotAllSignalsTime(t, ekg, ekg_filtered, ekg_afterNIR)
 
 
 figure();
 f_plotAllSignalsFreq(ekg, ekg_filtered, ekg_afterNIR, fd)
-
 
 function f_saveFig(figName, usingSubplots)
     if ~exist('usingSubplots','var')
