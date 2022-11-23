@@ -1,6 +1,9 @@
 import scipy.io
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.io import wavfile
+
+
 
 class Adapt:
     def __init__(self, debug = False):
@@ -48,6 +51,10 @@ class Adapt:
         if show:
             plt.show()
         plt.close()
+    
+    def saveSignalAsWav(self, noteData, filename):
+        wavfile.write(filename=filename, rate=self.Fs_Hz, data=noteData.astype(np.float32))
+    
 
 
 matData = scipy.io.loadmat('signalai/lab3_signalai.mat')
@@ -64,12 +71,37 @@ plt.rcParams.update({'font.size': 16})
 plt.rcParams.update({'figure.figsize': (16, 6)}) # horizontally longer figure 
 
 filterObj = Adapt()
-filterObj.drawSignal(variklioSig, "Variklis", True)
-filterObj.drawSignal(kabinosSig, "kabinos", True)
-filterObj.drawSignal(pilotoSig, "piloto", True)
 
-filterObj.drawSpectrum(variklioSig, "VariklisSpekt", True)
-filterObj.drawSpectrum(kabinosSig, "kabinosSpekt", True)
-filterObj.drawSpectrum(pilotoSig, "pilotoSpekt", True)
+# 3.3.1
+filterObj.drawSignal(variklioSig, "variklis")
+filterObj.drawSignal(kabinosSig, "kabinos")
+filterObj.drawSignal(pilotoSig, "piloto")
+
+filterObj.drawSpectrum(variklioSig, "Variklis")
+filterObj.drawSpectrum(kabinosSig, "kabinos")
+filterObj.drawSpectrum(pilotoSig, "piloto")
 
 
+# 3.3.2
+filterObj.saveSignalAsWav(variklioSig, f"out/variklis.wav")
+filterObj.saveSignalAsWav(kabinosSig, f"out/kabina.wav")
+filterObj.saveSignalAsWav(pilotoSig, f"out/pilotas.wav")
+
+
+
+
+# 3.4.1 MVK algoritmas
+filterOrder = 20
+step = 0.1
+# w = np.zeros(filterOrder, dtype=) 
+w  = np.zeros(filterOrder) # Transpose
+xa = np.zeros(filterOrder) 
+
+
+
+
+# circshift
+# >>> np.roll(a,2)
+# array([8, 9, 0, 1, 2, 3, 4, 5, 6, 7])
+# >>> np.roll(a,-2)
+# array([2, 3, 4, 5, 6, 7, 8, 9, 0, 1])
