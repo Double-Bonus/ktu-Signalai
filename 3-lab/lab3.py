@@ -65,6 +65,7 @@ variklioSig = matData.get('variklioSig')[0]
 kabinosSig = matData.get('kabinosSig')[0]
 pilotoSig = matData.get('pilotoSig')[0]
 
+print(type(kabinosSig))
 
 plt.rcParams.update({'font.family': "Times New Roman"})
 plt.rcParams.update({'font.size': 16})
@@ -91,17 +92,36 @@ filterObj.saveSignalAsWav(pilotoSig, f"out/pilotas.wav")
 
 
 # 3.4.1 MVK algoritmas
-filterOrder = 20
-step = 0.1
-# w = np.zeros(filterOrder, dtype=) 
-w  = np.zeros(filterOrder) # Transpose
-xa = np.zeros(filterOrder) 
+def calculate_MVK(inNoise, inCombine, filterOrder=20, step = 0.1): # MSE?
 
+    if len(inCombine) != len(inNoise):
+        print("Signals are not the same length")
+        exit -1
+        
+    w   = np.transpose(np.zeros((1, filterOrder)))
+    x_a = np.transpose(np.zeros((1, filterOrder)))
+    
+    # s_iv = [0] * 
+    s_iv = np.zeros((len(inNoise),))
 
-
+    for n in range(len(inNoise)):
+        x_a = np.roll(x_a, 1)
+        x_a[0][0] = inNoise[n]
+        x_iv = np.matmul(np.transpose(w), x_a)
+        s_iv[n] = inCombine[n] - x_iv[0]
+        w = w + 2*step*s_iv[n]*x_a
+    return s_iv
 
 # circshift
 # >>> np.roll(a,2)
 # array([8, 9, 0, 1, 2, 3, 4, 5, 6, 7])
 # >>> np.roll(a,-2)
 # array([2, 3, 4, 5, 6, 7, 8, 9, 0, 1])
+
+
+
+sig_afterMVK = calculate_MVK(variklioSig, kabinosSig)
+
+filterObj.drawSignal(sig_afterMVK, "sig_afterMVK")
+filterObj.drawSpectrum(sig_afterMVK, "sig_afterMVK")
+filterObj.saveSignalAsWav(sig_afterMVK, f"out/sigMVK.wav")
