@@ -76,6 +76,10 @@ def calculate_MVK(inNoise, inCombine, filterOrder=20, step = 0.1):
         w = w + 2*step*s_iv[n]*x_a
     return s_iv
 
+def calculate_MSE(real, prediction):
+    mse = (np.square(real - prediction)).mean()
+    return mse
+
 matData = scipy.io.loadmat('signalai/lab3_signalai.mat')
 
 print(matData)
@@ -92,45 +96,84 @@ plt.rcParams.update({'figure.figsize': (16, 6)}) # horizontally longer figure
 
 filterObj = Adapt()
 
-# 3.3.1
-filterObj.drawSignal(variklioSig, "variklis")
-filterObj.drawSignal(kabinosSig, "kabinos")
-filterObj.drawSignal(pilotoSig, "piloto")
+if 0:
+    # 3.3.1
+    filterObj.drawSignal(variklioSig, "variklis")
+    filterObj.drawSignal(kabinosSig, "kabinos")
+    filterObj.drawSignal(pilotoSig, "piloto")
 
-filterObj.drawSpectrum(variklioSig, "Variklis")
-filterObj.drawSpectrum(kabinosSig, "kabinos")
-filterObj.drawSpectrum(pilotoSig, "piloto")
-
-
-# 3.3.2
-filterObj.saveSignalAsWav(variklioSig, f"out/variklis.wav")
-filterObj.saveSignalAsWav(kabinosSig, f"out/kabina.wav")
-filterObj.saveSignalAsWav(pilotoSig, f"out/pilotas.wav")
+    filterObj.drawSpectrum(variklioSig, "Variklis")
+    filterObj.drawSpectrum(kabinosSig, "kabinos")
+    filterObj.drawSpectrum(pilotoSig, "piloto")
 
 
-
-# 3.4 
-sig_afterMVK = calculate_MVK(variklioSig, kabinosSig)
-
-filterObj.drawSignal(sig_afterMVK, "sig_afterMVK")
-filterObj.drawSpectrum(sig_afterMVK, "sig_afterMVK")
-filterObj.saveSignalAsWav(sig_afterMVK, f"out/sigMVK.wav")
+    # 3.3.2
+    filterObj.saveSignalAsWav(variklioSig, f"out/variklis.wav")
+    filterObj.saveSignalAsWav(kabinosSig, f"out/kabina.wav")
+    filterObj.saveSignalAsWav(pilotoSig, f"out/pilotas.wav")
 
 
+if 0:
+    # 3.4 
+    sig_afterMVK = calculate_MVK(variklioSig, kabinosSig)
+
+    filterObj.drawSignal(sig_afterMVK, "sig_afterMVK")
+    filterObj.drawSpectrum(sig_afterMVK, "sig_afterMVK")
+    filterObj.saveSignalAsWav(sig_afterMVK, f"out/sigMVK.wav")
 
 
-# 3.5 
-M_filterOrder = 20
-mu_step = 0.1
-M_array = [M_filterOrder, M_filterOrder*2, M_filterOrder//2]
-mu_string = str(mu_step)
-mu_string = mu_string.replace('.', ',')  # Convert for saving
-print("Analysis with different filter order")
-for M in M_array:
-    sig_MVK = calculate_MVK(variklioSig, kabinosSig, M, mu_step)
-    filterObj.drawSignal(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
-    filterObj.drawSpectrum(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
-    filterObj.saveSignalAsWav(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+
+if 0:
+    # 3.5.6
+    M_filterOrder = 20
+    mu_step = 0.1
+    M_array = [M_filterOrder, M_filterOrder*2, M_filterOrder//2]
+    mu_string = str(mu_step)
+    mu_string = mu_string.replace('.', ',')  # Convert for saving
+    print("Analysis with different filter order")
+    for M in M_array:
+        sig_MVK = calculate_MVK(variklioSig, kabinosSig, M, mu_step)
+        filterObj.drawSignal(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+        filterObj.drawSpectrum(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+        filterObj.saveSignalAsWav(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
     
+
+
+# 3.5.7
+# Filtro koeficientų skaičių 𝑀 galite keisti logaritminiu masteliu: 10,
+# 20, 50, 100. Adaptacijos žingsnio 𝜇 vertę galite keisti dėsniu 0.001, 0.005, 0.01, 0.05, 0.1.
+
+sig_MVK = calculate_MVK(variklioSig, kabinosSig)
+
+print(calculate_MSE(pilotoSig, sig_MVK))
+
+M = [10, 15, 20, 25, 50, 100] # there are better ways
+# M = [10, 15, 20] # there are better ways
+
+u_mu = [0.001, 0.005, 0.01, 0.05, 0.1]
+# u_mu = [0.001, 0.01, 0.1]
+
+MSE_array = np.zeros((len(M), len(u_mu)))
+
+for i in range(len(M)):
+    for j in range(len(u_mu)):
+        MSE_array[i, j] = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, M[i], u_mu[j]))
+
+# find min - i and j
+
+         
+plt.figure
+plt.plot(M, MSE_array) # check markers
+plt.title('MSE nuo M ir mu')
+plt.xlabel('M')
+plt.ylabel('MSE')
+plt.grid(True)
+# plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight', pad_inches=0)
+# add legend
+plt.show()
+
+
+# plot MSE_array over time
+
 
 
