@@ -54,8 +54,27 @@ class Adapt:
     
     def saveSignalAsWav(self, noteData, filename):
         wavfile.write(filename=filename, rate=self.Fs_Hz, data=noteData.astype(np.float32))
-    
+   
+ 
+# 3.4.1 MVK algoritmas
+def calculate_MVK(inNoise, inCombine, filterOrder=20, step = 0.1):
 
+    if len(inCombine) != len(inNoise):
+        print("Signals are not the same length")
+        exit -1
+        
+    w   = np.transpose(np.zeros((1, filterOrder)))
+    x_a = np.transpose(np.zeros((1, filterOrder)))
+    
+    s_iv = np.zeros((len(inNoise),))
+
+    for n in range(len(inNoise)):
+        x_a = np.roll(x_a, 1)
+        x_a[0] = inNoise[n]
+        x_iv = np.matmul(np.transpose(w), x_a)
+        s_iv[n] = inCombine[n] - x_iv[0]
+        w = w + 2*step*s_iv[n]*x_a
+    return s_iv
 
 matData = scipy.io.loadmat('signalai/lab3_signalai.mat')
 
@@ -90,38 +109,28 @@ filterObj.saveSignalAsWav(pilotoSig, f"out/pilotas.wav")
 
 
 
-
-# 3.4.1 MVK algoritmas
-def calculate_MVK(inNoise, inCombine, filterOrder=20, step = 0.1): # MSE?
-
-    if len(inCombine) != len(inNoise):
-        print("Signals are not the same length")
-        exit -1
-        
-    w   = np.transpose(np.zeros((1, filterOrder)))
-    x_a = np.transpose(np.zeros((1, filterOrder)))
-    
-    # s_iv = [0] * 
-    s_iv = np.zeros((len(inNoise),))
-
-    for n in range(len(inNoise)):
-        x_a = np.roll(x_a, 1)
-        x_a[0][0] = inNoise[n]
-        x_iv = np.matmul(np.transpose(w), x_a)
-        s_iv[n] = inCombine[n] - x_iv[0]
-        w = w + 2*step*s_iv[n]*x_a
-    return s_iv
-
-# circshift
-# >>> np.roll(a,2)
-# array([8, 9, 0, 1, 2, 3, 4, 5, 6, 7])
-# >>> np.roll(a,-2)
-# array([2, 3, 4, 5, 6, 7, 8, 9, 0, 1])
-
-
-
+# 3.4 
 sig_afterMVK = calculate_MVK(variklioSig, kabinosSig)
 
 filterObj.drawSignal(sig_afterMVK, "sig_afterMVK")
 filterObj.drawSpectrum(sig_afterMVK, "sig_afterMVK")
 filterObj.saveSignalAsWav(sig_afterMVK, f"out/sigMVK.wav")
+
+
+
+
+# 3.5 
+M_filterOrder = 20
+mu_step = 0.1
+M_array = [M_filterOrder, M_filterOrder*2, M_filterOrder//2]
+mu_string = str(mu_step)
+mu_string = mu_string.replace('.', ',')  # Convert for saving
+print("Analysis with different filter order")
+for M in M_array:
+    sig_MVK = calculate_MVK(variklioSig, kabinosSig, M, mu_step)
+    filterObj.drawSignal(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+    filterObj.drawSpectrum(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+    filterObj.saveSignalAsWav(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+    
+
+
