@@ -142,29 +142,74 @@ if 0:
 # 3.5.7
 # Filtro koeficientų skaičių 𝑀 galite keisti logaritminiu masteliu: 10,
 # 20, 50, 100. Adaptacijos žingsnio 𝜇 vertę galite keisti dėsniu 0.001, 0.005, 0.01, 0.05, 0.1.
+if 0:
+    sig_MVK = calculate_MVK(variklioSig, kabinosSig)
 
-sig_MVK = calculate_MVK(variklioSig, kabinosSig)
+    print(calculate_MSE(pilotoSig, sig_MVK))
 
-print(calculate_MSE(pilotoSig, sig_MVK))
+    M = [10, 15, 20, 25, 50, 100] # there are better ways
+    # M = [10, 15, 20] # there are better ways
 
-M = [10, 15, 20, 25, 50, 100] # there are better ways
-# M = [10, 15, 20] # there are better ways
+    u_mu = [0.001, 0.005, 0.01, 0.05, 0.1]
+    # u_mu = [0.001, 0.01, 0.1]
 
-u_mu = [0.001, 0.005, 0.01, 0.05, 0.1]
-# u_mu = [0.001, 0.01, 0.1]
+    MSE_array = np.zeros((len(M), len(u_mu)))
 
-MSE_array = np.zeros((len(M), len(u_mu)))
+    for i in range(len(M)):
+        for j in range(len(u_mu)):
+            MSE_array[i, j] = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, M[i], u_mu[j]))
 
-for i in range(len(M)):
-    for j in range(len(u_mu)):
-        MSE_array[i, j] = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, M[i], u_mu[j]))
+    # find min - i and j
 
-# find min - i and j
+            
+    plt.figure
+    plt.plot(M, MSE_array) # check markers
+    plt.title('MSE nuo M ir mu')
+    plt.xlabel('M')
+    plt.ylabel('MSE')
+    plt.grid(True)
+    # plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight', pad_inches=0)
+    # add legend
+    plt.show()
 
-         
+
+# plot MSE_array over time
+# Pavaizduokite adaptacijos greičio kreives (𝑀𝑆𝐸 priklausomybes nuo laiko) esant adaptacijos
+# žingsnio vertėms 𝜇 = 0.001, 𝜇 = 0.01, 𝜇 = 0.1. 𝑀𝑆𝐸 galite skaičiuoti 10 ms ar ilgesniuose
+# intervaluose.
+intervalMSE_ms = 20 * 10**-3
+timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_ms)
+
+bestM = 20 # TODO: check
+pilotEstimate1 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.001)
+pilotEstimate2 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.01)
+pilotEstimate3 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.1)
+
+MSE_overTime_array = np.zeros((3, (len(timeMSE_ms))))
+
+start_i = 0
+end_i = int(intervalMSE_ms*filterObj.Fs_Hz) # python need int
+
+print("----------------------------")
+print(start_i)
+print(end_i)
+
+increseInterval = end_i
+# for i in range(len(20)):
+for i in range(20):
+    MSE_overTime_array[0, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate1[start_i:end_i])
+    MSE_overTime_array[1, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate2[start_i:end_i])
+    MSE_overTime_array[2, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate3[start_i:end_i])
+    start_i = start_i + increseInterval
+    end_i = end_i + increseInterval
+
+
+
+
+test_mu = [0.001, 0.01, 0.1]
 plt.figure
-plt.plot(M, MSE_array) # check markers
-plt.title('MSE nuo M ir mu')
+plt.plot(test_mu, MSE_overTime_array) # check markers
+plt.title('MSE nuo mu overtime')
 plt.xlabel('M')
 plt.ylabel('MSE')
 plt.grid(True)
@@ -173,7 +218,6 @@ plt.grid(True)
 plt.show()
 
 
-# plot MSE_array over time
 
 
 
