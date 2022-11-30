@@ -177,8 +177,8 @@ if 0:
 # Pavaizduokite adaptacijos greičio kreives (𝑀𝑆𝐸 priklausomybes nuo laiko) esant adaptacijos
 # žingsnio vertėms 𝜇 = 0.001, 𝜇 = 0.01, 𝜇 = 0.1. 𝑀𝑆𝐸 galite skaičiuoti 10 ms ar ilgesniuose
 # intervaluose.
-intervalMSE_ms = 20 * 10**-3
-timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_ms)
+intervalMSE_s = 20 * 10**-3
+timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_s)
 
 bestM = 20 # TODO: check
 pilotEstimate1 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.001)
@@ -187,16 +187,17 @@ pilotEstimate3 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.1)
 
 MSE_overTime_array = np.zeros((3, (len(timeMSE_ms))))
 
+
 start_i = 0
-end_i = int(intervalMSE_ms*filterObj.Fs_Hz) # python need int
+end_i = int(intervalMSE_s*filterObj.Fs_Hz) # python need int
 
 print("----------------------------")
 print(start_i)
 print(end_i)
 
 increseInterval = end_i
-# for i in range(len(20)):
-for i in range(20):
+# for i in range(20):
+for i in range(len(timeMSE_ms)):
     MSE_overTime_array[0, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate1[start_i:end_i])
     MSE_overTime_array[1, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate2[start_i:end_i])
     MSE_overTime_array[2, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate3[start_i:end_i])
@@ -206,9 +207,11 @@ for i in range(20):
 
 
 
-test_mu = [0.001, 0.01, 0.1]
+# test_mu = [0.001, 0.01, 0.1]
 plt.figure
-plt.plot(test_mu, MSE_overTime_array) # check markers
+plt.plot(timeMSE_ms, MSE_overTime_array[0]) # check markers
+plt.plot(timeMSE_ms, MSE_overTime_array[1]) # check markers
+plt.plot(timeMSE_ms, MSE_overTime_array[2]) # check markers
 plt.title('MSE nuo mu overtime')
 plt.xlabel('M')
 plt.ylabel('MSE')
