@@ -97,6 +97,40 @@ def calculate_NMVK(inNoise, inCombine, filterOrder=20, step = 0.1):
         w = w + (step / (np.matmul(np.transpose(x_a), x_a))) * s_iv[n] * x_a # only this differs from MVK
     return s_iv
 
+def calculate_RMK(inNoise, inCombine, filterOrder=20, Lam=0.99):
+    
+    if len(inCombine) != len(inNoise):
+        print("Signals are not the same length")
+        exit -1
+    
+    delta = 0.01
+    I = np.eye(filterOrder)
+    P = (delta**-1) * I
+    
+    w   = np.transpose(np.zeros((1, filterOrder)))
+    x_a = np.transpose(np.zeros((1, filterOrder)))
+    
+    s_iv = np.zeros((len(inNoise),))
+
+    for n in range(len(inNoise)):
+        x_a = np.roll(x_a, 1)
+        x_a[0] = inNoise[n]
+        
+        u = np.matmul(P, x_a)
+        v = np.matmul(np.transpose(P), x_a)
+        
+        v_norm = np.linalg.norm(v)
+        k = 1 / (Lam + v_norm**2 + np.sqrt(Lam)*np.sqrt(Lam+v_norm**2))
+        
+        P = (P - k * np.matmul(v, np.transpose(u))) / np.sqrt(Lam)   
+        
+        x_iv = np.matmul(np.transpose(w), x_a)
+        s_iv[n] = inCombine[n] - x_iv[0]
+            
+        w = w + ((s_iv[n] * u) / (Lam + v_norm**2))
+    
+    return s_iv
+
 
 
 def calculate_MSE(real, prediction):
@@ -260,7 +294,32 @@ print(f"MSE of MVK mean: {mse_mvk_mean}")
 
 
 # 4 Papildoma
+if 1:
+    sig_RMK = calculate_RMK(variklioSig, kabinosSig)
 
+    print(calculate_MSE(pilotoSig, sig_RMK))
+
+    # M = [10, 15, 20, 25, 50, 100] # there are better ways
+    M = [10, 20] # there are better ways
+    lambda_val = [1, 0.99]
+
+    MSE_array_RMK = np.zeros((len(M), len(lambda_val)))
+
+    for i in range(len(M)):
+        for j in range(len(lambda_val)):
+            MSE_array_RMK[i, j] = calculate_MSE(pilotoSig, calculate_RMK(variklioSig, kabinosSig, M[i], lambda_val[j]))
+
+    # find min - i and j
+            
+    plt.figure
+    plt.plot(M, MSE_array_RMK) # check markers
+    plt.title('MSE nuo M ir lamdos')
+    plt.xlabel('M')
+    plt.ylabel('MSE')
+    plt.grid(True)
+    # plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight', pad_inches=0)
+    # add legend
+    plt.show()
 
 
 
