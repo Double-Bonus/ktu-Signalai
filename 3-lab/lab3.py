@@ -76,6 +76,29 @@ def calculate_MVK(inNoise, inCombine, filterOrder=20, step = 0.1):
         w = w + 2*step*s_iv[n]*x_a
     return s_iv
 
+#3.6
+def calculate_NMVK(inNoise, inCombine, filterOrder=20, step = 0.1):
+    
+    if len(inCombine) != len(inNoise):
+        print("Signals are not the same length")
+        exit -1
+        
+    w   = np.transpose(np.zeros((1, filterOrder)))
+    x_a = np.transpose(np.zeros((1, filterOrder)))
+    
+    s_iv = np.zeros((len(inNoise),))
+
+    for n in range(len(inNoise)):
+        x_a = np.roll(x_a, 1)
+        x_a[0] = inNoise[n]
+        x_iv = np.matmul(np.transpose(w), x_a)
+        s_iv[n] = inCombine[n] - x_iv[0]
+        
+        w = w + (step / (np.matmul(np.transpose(x_a), x_a))) * s_iv[n] * x_a # only this differs from MVK
+    return s_iv
+
+
+
 def calculate_MSE(real, prediction):
     mse = (np.square(real - prediction)).mean()
     return mse
@@ -177,50 +200,69 @@ if 0:
 # Pavaizduokite adaptacijos greičio kreives (𝑀𝑆𝐸 priklausomybes nuo laiko) esant adaptacijos
 # žingsnio vertėms 𝜇 = 0.001, 𝜇 = 0.01, 𝜇 = 0.1. 𝑀𝑆𝐸 galite skaičiuoti 10 ms ar ilgesniuose
 # intervaluose.
-intervalMSE_s = 20 * 10**-3
-timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_s)
+if 0:
+    intervalMSE_s = 20 * 10**-3
+    timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_s)
 
-bestM = 20 # TODO: check
-pilotEstimate1 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.001)
-pilotEstimate2 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.01)
-pilotEstimate3 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.1)
+    bestM = 20 # TODO: check
+    pilotEstimate1 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.001)
+    pilotEstimate2 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.01)
+    pilotEstimate3 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.1)
 
-MSE_overTime_array = np.zeros((3, (len(timeMSE_ms))))
-
-
-start_i = 0
-end_i = int(intervalMSE_s*filterObj.Fs_Hz) # python need int
-
-print("----------------------------")
-print(start_i)
-print(end_i)
-
-increseInterval = end_i
-# for i in range(20):
-for i in range(len(timeMSE_ms)):
-    MSE_overTime_array[0, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate1[start_i:end_i])
-    MSE_overTime_array[1, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate2[start_i:end_i])
-    MSE_overTime_array[2, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate3[start_i:end_i])
-    start_i = start_i + increseInterval
-    end_i = end_i + increseInterval
+    MSE_overTime_array = np.zeros((3, (len(timeMSE_ms))))
 
 
+    start_i = 0
+    end_i = int(intervalMSE_s*filterObj.Fs_Hz) # python need int
 
+    print("----------------------------")
+    print(start_i)
+    print(end_i)
 
-# test_mu = [0.001, 0.01, 0.1]
-plt.figure
-plt.plot(timeMSE_ms, MSE_overTime_array[0]) # check markers
-plt.plot(timeMSE_ms, MSE_overTime_array[1]) # check markers
-plt.plot(timeMSE_ms, MSE_overTime_array[2]) # check markers
-plt.title('MSE nuo mu overtime')
-plt.xlabel('M')
-plt.ylabel('MSE')
-plt.grid(True)
-# plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight', pad_inches=0)
-# add legend
-plt.show()
+    increseInterval = end_i
+    # for i in range(20):
+    for i in range(len(timeMSE_ms)):
+        MSE_overTime_array[0, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate1[start_i:end_i])
+        MSE_overTime_array[1, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate2[start_i:end_i])
+        MSE_overTime_array[2, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate3[start_i:end_i])
+        start_i = start_i + increseInterval
+        end_i = end_i + increseInterval
 
 
 
 
+    # test_mu = [0.001, 0.01, 0.1]
+    plt.figure
+    plt.plot(timeMSE_ms, MSE_overTime_array[0]) # check markers
+    plt.plot(timeMSE_ms, MSE_overTime_array[1]) # check markers
+    plt.plot(timeMSE_ms, MSE_overTime_array[2]) # check markers
+    plt.title('MSE nuo mu overtime')
+    plt.xlabel('M')
+    plt.ylabel('MSE')
+    plt.grid(True)
+    # plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight', pad_inches=0)
+    # add legend
+    plt.show()
 
+
+
+# 3.6
+# Normalizuoto mažiausių vidutinių kvadratų adaptyviojo algoritmo įgyvendinimas
+best_mu = 0.01
+bestM = 20
+
+mse_mvk = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, bestM, best_mu))
+mse_mvk_mean = calculate_MSE(pilotoSig, calculate_NMVK(variklioSig, kabinosSig, bestM, best_mu))
+
+    
+print(f"MSE of MVK: {mse_mvk}")
+print(f"MSE of MVK mean: {mse_mvk_mean}")
+
+
+# 4 Papildoma
+
+
+
+
+
+ 
