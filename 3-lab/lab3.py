@@ -97,7 +97,7 @@ def calculate_NMVK(inNoise, inCombine, filterOrder=20, step = 0.1):
         w = w + (step / (np.matmul(np.transpose(x_a), x_a))) * s_iv[n] * x_a # only this differs from MVK
     return s_iv
 
-def calculate_RMK(inNoise, inCombine, filterOrder=20, Lam=0.99):
+def calculate_RMK(inNoise, inCombine, filterOrder=11, Lam=1):
     
     if len(inCombine) != len(inNoise):
         print("Signals are not the same length")
@@ -113,11 +113,14 @@ def calculate_RMK(inNoise, inCombine, filterOrder=20, Lam=0.99):
     s_iv = np.zeros((len(inNoise),))
 
     for n in range(len(inNoise)):
+        # if n == 69817-10:
+        #     print("tests")
+        
         x_a = np.roll(x_a, 1)
         x_a[0] = inNoise[n]
         
-        u = np.matmul(P, x_a)
-        v = np.matmul(np.transpose(P), x_a)
+        v = np.matmul(P, x_a)
+        u = np.matmul(np.transpose(P), v)
         
         v_norm = np.linalg.norm(v)
         k = 1 / (Lam + v_norm**2 + np.sqrt(Lam)*np.sqrt(Lam+v_norm**2))
@@ -126,6 +129,10 @@ def calculate_RMK(inNoise, inCombine, filterOrder=20, Lam=0.99):
         
         x_iv = np.matmul(np.transpose(w), x_a)
         s_iv[n] = inCombine[n] - x_iv[0]
+        if np.isnan(s_iv[n]):
+            print(s_iv[n])
+        # if s_iv[n] == nan:
+            
             
         w = w + ((s_iv[n] * u) / (Lam + v_norm**2))
     
@@ -282,15 +289,16 @@ if 0:
 
 # 3.6
 # Normalizuoto mažiausių vidutinių kvadratų adaptyviojo algoritmo įgyvendinimas
-best_mu = 0.01
-bestM = 20
+if 0:
+    best_mu = 0.01
+    bestM = 20
 
-mse_mvk = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, bestM, best_mu))
-mse_mvk_mean = calculate_MSE(pilotoSig, calculate_NMVK(variklioSig, kabinosSig, bestM, best_mu))
+    mse_mvk = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, bestM, best_mu))
+    mse_mvk_mean = calculate_MSE(pilotoSig, calculate_NMVK(variklioSig, kabinosSig, bestM, best_mu))
 
-    
-print(f"MSE of MVK: {mse_mvk}")
-print(f"MSE of MVK mean: {mse_mvk_mean}")
+        
+    print(f"MSE of MVK: {mse_mvk}")
+    print(f"MSE of MVK mean: {mse_mvk_mean}")
 
 
 # 4 Papildoma
@@ -299,16 +307,16 @@ if 1:
 
     print(calculate_MSE(pilotoSig, sig_RMK))
 
-    # M = [10, 15, 20, 25, 50, 100] # there are better ways
-    M = [10, 20] # there are better ways
-    lambda_val = [1, 0.99]
+    M = [10, 15, 20, 25, 50, 100] # there are better ways
+    # M = [15] # there are better ways
+    lambda_val = [1, 0.99, 0.98, 0.97, 0.96, 0.95]
 
     MSE_array_RMK = np.zeros((len(M), len(lambda_val)))
 
     for i in range(len(M)):
         for j in range(len(lambda_val)):
             MSE_array_RMK[i, j] = calculate_MSE(pilotoSig, calculate_RMK(variklioSig, kabinosSig, M[i], lambda_val[j]))
-
+    print("Calculated MSE for RNK filter")
     # find min - i and j
             
     plt.figure
