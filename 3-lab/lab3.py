@@ -187,7 +187,7 @@ if 0:
     print("Calculated and saved signal after MKV")
     
 
-if 0:
+if 1:
     # 3.5.6
     M_filterOrder = 20
     mu_step = 0.1
@@ -199,7 +199,7 @@ if 0:
         sig_MVK = calculate_MVK(variklioSig, kabinosSig, M, mu_step)
         filterObj.drawSignal(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
         filterObj.drawSpectrum(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
-        filterObj.saveSignalAsWav(sig_MVK, f"piloto signalas, kai M = {M}, mu = {mu_string}")
+        filterObj.saveSignalAsWav(sig_MVK, f"out/piloto signalas, kai M = {M}, mu = {mu_string}.wav")
     
 
 
