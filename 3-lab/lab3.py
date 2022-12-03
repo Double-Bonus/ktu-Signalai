@@ -2,6 +2,7 @@ import scipy.io
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import wavfile
+from sklearn import preprocessing
 
 
 
@@ -19,7 +20,7 @@ class Adapt:
             plt.plot(tn, signal_y, 'r-')
             plt.title('Signalas laiko srityje, ' + title)
             plt.xlabel('t, s')
-            plt.ylabel('A')
+            plt.ylabel('Amplitudė')
             plt.grid(True)
             plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight',
                         pad_inches=0)
@@ -111,11 +112,8 @@ def calculate_RMK(inNoise, inCombine, filterOrder=11, Lam=1):
     x_a = np.transpose(np.zeros((1, filterOrder)))
     
     s_iv = np.zeros((len(inNoise),))
-
-    for n in range(len(inNoise)):
-        # if n == 69817-10:
-        #     print("tests")
-        
+    
+    for n in range(len(inNoise)): 
         x_a = np.roll(x_a, 1)
         x_a[0] = inNoise[n]
         
@@ -131,14 +129,10 @@ def calculate_RMK(inNoise, inCombine, filterOrder=11, Lam=1):
         s_iv[n] = inCombine[n] - x_iv[0]
         if np.isnan(s_iv[n]):
             print(s_iv[n])
-        # if s_iv[n] == nan:
-            
-            
+  
         w = w + ((s_iv[n] * u) / (Lam + v_norm**2))
     
     return s_iv
-
-
 
 def calculate_MSE(real, prediction):
     mse = (np.square(real - prediction)).mean()
@@ -152,6 +146,12 @@ variklioSig = matData.get('variklioSig')[0]
 kabinosSig = matData.get('kabinosSig')[0]
 pilotoSig = matData.get('pilotoSig')[0]
 
+# # Normalize in 1/-1 range
+# variklioSig = preprocessing.minmax_scale(variklioSig, feature_range=(-1,1))
+# kabinosSig = preprocessing.minmax_scale(kabinosSig, feature_range=(-1,1))
+# pilotoSig = preprocessing.minmax_scale(pilotoSig, feature_range=(-1,1))
+
+print("Loaded signals")
 print(type(kabinosSig))
 
 plt.rcParams.update({'font.family': "Times New Roman"})
@@ -170,22 +170,22 @@ if 0:
     filterObj.drawSpectrum(kabinosSig, "kabinos")
     filterObj.drawSpectrum(pilotoSig, "piloto")
 
-
     # 3.3.2
     filterObj.saveSignalAsWav(variklioSig, f"out/variklis.wav")
     filterObj.saveSignalAsWav(kabinosSig, f"out/kabina.wav")
     filterObj.saveSignalAsWav(pilotoSig, f"out/pilotas.wav")
-
+    print("Saved wav files")
+    
 
 if 0:
     # 3.4 
-    sig_afterMVK = calculate_MVK(variklioSig, kabinosSig)
+    pilot_afterMVK = calculate_MVK(variklioSig, kabinosSig)
 
-    filterObj.drawSignal(sig_afterMVK, "sig_afterMVK")
-    filterObj.drawSpectrum(sig_afterMVK, "sig_afterMVK")
-    filterObj.saveSignalAsWav(sig_afterMVK, f"out/sigMVK.wav")
-
-
+    filterObj.drawSignal(pilot_afterMVK, "piloto po MKV")
+    filterObj.drawSpectrum(pilot_afterMVK, "piloto po MKV")
+    filterObj.saveSignalAsWav(pilot_afterMVK, f"out/pilotasMVK.wav")
+    print("Calculated and saved signal after MKV")
+    
 
 if 0:
     # 3.5.6
@@ -206,34 +206,35 @@ if 0:
 # 3.5.7
 # Filtro koeficientų skaičių 𝑀 galite keisti logaritminiu masteliu: 10,
 # 20, 50, 100. Adaptacijos žingsnio 𝜇 vertę galite keisti dėsniu 0.001, 0.005, 0.01, 0.05, 0.1.
-if 0:
+if 1:
     sig_MVK = calculate_MVK(variklioSig, kabinosSig)
 
     print(calculate_MSE(pilotoSig, sig_MVK))
 
-    M = [10, 15, 20, 25, 50, 100] # there are better ways
-    # M = [10, 15, 20] # there are better ways
-
+    M = [10, 15, 20, 25, 50, 100]
     u_mu = [0.001, 0.005, 0.01, 0.05, 0.1]
-    # u_mu = [0.001, 0.01, 0.1]
 
+    print("Calculating MSE for different M and mu combinations")
     MSE_array = np.zeros((len(M), len(u_mu)))
 
     for i in range(len(M)):
         for j in range(len(u_mu)):
             MSE_array[i, j] = calculate_MSE(pilotoSig, calculate_MVK(variklioSig, kabinosSig, M[i], u_mu[j]))
+    print("Calculated MSE's")
 
     # find min - i and j
 
-            
-    plt.figure
-    plt.plot(M, MSE_array) # check markers
+    plt.figure   
+    for i_miu in range(len(u_mu)):
+        temp_mu = u_mu[i_miu]
+        plt.plot(M, MSE_array[:, i_miu], marker='D', label=f"mu = {temp_mu}")
     plt.title('MSE nuo M ir mu')
     plt.xlabel('M')
     plt.ylabel('MSE')
     plt.grid(True)
+    plt.legend(loc="upper left")
+    
     # plt.savefig(self.saveDir + "amp_" + title,  bbox_inches='tight', pad_inches=0)
-    # add legend
     plt.show()
 
 
