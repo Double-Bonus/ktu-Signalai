@@ -302,7 +302,7 @@ if 0:
 
 
 # 4 Papildoma
-if 1:
+if 0:
     sig_RMK = calculate_RMK(variklioSig, kabinosSig)
 
     print(calculate_MSE(pilotoSig, sig_RMK))
@@ -330,6 +330,44 @@ if 1:
     plt.show()
 
 
+# compare all there metdods overtime
+if 1:
+    print("Comparing all 3 metdods")
+    intervalMSE_s = 40 * 10**-3
+    timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_s)
 
+    bestM = 20 # TODO: check
+    bestLambda = 1
+    pilotEstimate1 = calculate_MVK(variklioSig, kabinosSig, bestM, 0.01)
+    pilotEstimate2 = calculate_NMVK(variklioSig, kabinosSig, bestM, 0.01)
+    pilotEstimate3 = calculate_RMK(variklioSig, kabinosSig, bestM, bestLambda)
+
+    MSE_overTime_array = np.zeros((3, (len(timeMSE_ms))))
+
+
+    start_i = 0
+    end_i = int(intervalMSE_s*filterObj.Fs_Hz) # python needs int
+    
+    increseInterval = end_i
+    for i in range(len(timeMSE_ms)):
+        MSE_overTime_array[0, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate1[start_i:end_i])
+        MSE_overTime_array[1, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate2[start_i:end_i])
+        MSE_overTime_array[2, i] = calculate_MSE(pilotoSig[start_i:end_i], pilotEstimate3[start_i:end_i])
+        start_i = start_i + increseInterval
+        end_i = end_i + increseInterval
+
+
+    plt.figure
+    plt.plot(timeMSE_ms, MSE_overTime_array[0], label="MVK")
+    plt.plot(timeMSE_ms, MSE_overTime_array[1], label="NMVK")
+    plt.plot(timeMSE_ms, MSE_overTime_array[2], label="RMK")
+    plt.legend(loc="upper right")
+    plt.title('Algoritmu palyginimas')
+    plt.xlabel('t, s')
+    plt.ylabel('MSE')
+    plt.grid(True)
+    plt.ylim(0, 0.0025)
+    plt.savefig(filterObj.saveDir + "Algoritmu palyginimas",  bbox_inches='tight', pad_inches=0)
+    plt.show()
 
  
