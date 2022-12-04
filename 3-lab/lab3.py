@@ -158,7 +158,7 @@ plt.rcParams.update({'figure.figsize': (16, 6)}) # horizontally longer figure
 filterObj = Adapt()
 
 # Show signal over time and signal spectrum
-if 1:
+if 0:
     # 3.3.1
     filterObj.drawSignal(variklioSig, "variklis")
     filterObj.drawSignal(kabinosSig, "kabinos")
@@ -176,7 +176,7 @@ if 1:
     
 
 # 3.4 MVK 
-if 1:
+if 0:
     pilot_afterMVK = calculate_MVK(variklioSig, kabinosSig)
 
     filterObj.drawSignal(pilot_afterMVK, "piloto po MKV")
@@ -186,7 +186,7 @@ if 1:
     
 
 # 3.5.6 - Compare with different M
-if 1:
+if 0:
     M_filterOrder = 20
     mu_step = 0.1
     M_array = [M_filterOrder, M_filterOrder*2, M_filterOrder//2]
@@ -202,7 +202,7 @@ if 1:
 # 3.5.7
 # Filtro koeficientų skaičių 𝑀 galite keisti logaritminiu masteliu: 10,
 # 20, 50, 100. Adaptacijos žingsnio 𝜇 vertę galite keisti dėsniu 0.001, 0.005, 0.01, 0.05, 0.1.
-if 1:
+if 0:
     sig_MVK = calculate_MVK(variklioSig, kabinosSig)
 
     print(calculate_MSE(pilotoSig, sig_MVK))
@@ -243,7 +243,7 @@ if 1:
 # Pavaizduokite adaptacijos greičio kreives (𝑀𝑆𝐸 priklausomybes nuo laiko) esant adaptacijos
 # žingsnio vertėms 𝜇 = 0.001, 𝜇 = 0.01, 𝜇 = 0.1. 𝑀𝑆𝐸 galite skaičiuoti 10 ms ar ilgesniuose
 # intervaluose.
-if 1:
+if 0:
     intervalMSE_s = 20 * 10**-3
     timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_s)
 
@@ -296,10 +296,17 @@ if 1:
 
     print(f"MSE of MVK: {mse_mvk}")
     print(f"MSE of MVK mean: {mse_mvk_mean}")
+    
+    # Save files for MATLAB:
+    mvk_dic = {"pilot_mvk": pilot_mvk, "pilot_nmvk": pilot_nmvk, "data_label": "Generated signals"}
+    nmvk_dic = { "label": "pilot signal nmvk"}
+    scipy.io.savemat("pilot_sig.mat", mvk_dic)
+    # scipy.io.savemat("pilot_sig_mvk.mat", mvk_dic)
+    # scipy.io.savemat("pilot_sig_nmvk.mat", nmvk_dic)
 
 
 # 4 Papildoma
-if 1:
+if 0:
     sig_RMK = calculate_RMK(variklioSig, kabinosSig)
 
     filterObj.drawSignal(sig_RMK, "piloto naudojant RMK")
@@ -333,7 +340,7 @@ if 1:
 
 
 # compare all there metdods overtime
-if 1:
+if 0:
     print("Comparing all 3 metdods")
     intervalMSE_s = 40 * 10**-3
     timeMSE_ms = np.arange(0, filterObj.time_s*1000, intervalMSE_s)
